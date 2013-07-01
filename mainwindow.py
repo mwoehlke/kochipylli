@@ -54,7 +54,7 @@ class MainWindow(KMainWindow):
         listview.setFlow(QListView.TopToBottom)
         listview.setResizeMode(QListView.Adjust)
         listview.setLayoutMode(QListView.Batched)
-        listview.setBatchSize(5)
+        listview.setBatchSize(30)
         listview.setIconSize(self.m_icon_size)
         dock = QDockWidget(i18n("Results"))
         dock.setWidget(listview)
