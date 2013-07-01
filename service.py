@@ -37,7 +37,6 @@ class Service(QObject):
 
     #--------------------------------------------------------------------------
     def getThumbnail(self, thumb_url, name, title, fetch_url):
-        print "requesting", thumb_url
         reply = self.m_net_manager.get(QNetworkRequest(QUrl(thumb_url)))
         reply.setProperty("name", name)
         reply.setProperty("title", title)
