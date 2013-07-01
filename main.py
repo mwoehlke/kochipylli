@@ -1,6 +1,7 @@
 # Copyright 2013 Matthew Woehlke <mw_triad@users.sourceforge.net>
 # Licensed under GPLv3
 
+import importlib
 import sys
 
 from PyKDE4.kdecore import *
@@ -25,11 +26,21 @@ if __name__ == '__main__':
     aboutData   = KAboutData(appName, catalog, programName, version,
                              description, license, copyright, text,
                              homePage, bugEmail)
-
     KCmdLineArgs.init(sys.argv, aboutData)
 
+    options = KCmdLineOptions();
+    options.add("!+service", ki18n("Python service definition"));
+    options.add("!+archive", ki18n("Location of archive directory"));
+    KCmdLineArgs.addCmdLineOptions(options);
+
+    args = KCmdLineArgs.parsedArgs();
+    if args.count() < 2:
+        args.usageError(i18n("Not enough arguments"))
+
+    service_module = importlib.import_module(str(args.arg(0)))
+
     app = KApplication()
-    mainWindow = MainWindow(None)
+    mainWindow = MainWindow(service_module.createService(), args.arg(1))
     mainWindow.show()
     app.exec_()
 

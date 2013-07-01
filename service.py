@@ -14,11 +14,13 @@ class Service(QObject):
     def __init__(self, parent = None):
         QObject.__init__(self, parent)
         self.m_window = None
+        self.m_archive = None
         self.m_net_manager = QNetworkAccessManager(self)
 
     #--------------------------------------------------------------------------
-    def bind(self, window):
+    def bind(self, window, archive):
         self.m_window = window
+        self.m_archive = QDir(archive)
 
     #--------------------------------------------------------------------------
     def requestImageListing(self, url):

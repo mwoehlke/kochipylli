@@ -34,12 +34,12 @@ class MainWindow(KMainWindow):
     FetchUrlRole = Qt.UserRole + 1
 
     #--------------------------------------------------------------------------
-    def __init__(self, service):
+    def __init__(self, service, archive):
         KMainWindow.__init__(self)
         self.resize(720, 480)
 
         self.m_service = service
-        service.bind(self)
+        service.bind(self, archive)
         self.m_icon_size = service.iconSize()
 
         # Create Gwenview part

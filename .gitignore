@@ -1,3 +1,4 @@
 *.pyc
 /kochipylli.kdev4
 /.kdev4/
+/services/
