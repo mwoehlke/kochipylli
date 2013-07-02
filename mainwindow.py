@@ -38,6 +38,13 @@ class MainWindow(KMainWindow):
         KMainWindow.__init__(self)
         self.resize(720, 480)
 
+        # Set up status bar
+        self.m_progress = QProgressBar()
+        self.m_progress.setMaximumWidth(200)
+        self.statusBar().addPermanentWidget(self.m_progress)
+        self.m_active_jobs = 0
+
+        # Bind service
         self.m_service = service
         service.bind(self)
         self.m_icon_size = service.iconSize()
@@ -77,12 +84,30 @@ class MainWindow(KMainWindow):
         self.m_list = listview
 
     #--------------------------------------------------------------------------
+    def setActiveJobs(self, jobs):
+        self.m_active_jobs = jobs
+        self.updateStatus()
+
+    #--------------------------------------------------------------------------
+    def updateStatus(self):
+        if self.m_active_jobs:
+            msg = i18np("%1 download", "%1 downloads", self.m_active_jobs)
+            self.statusBar().showMessage(msg)
+            self.m_progress.setRange(0, 0)
+        else:
+            num_results = self.m_list.count()
+            msg = i18np("%1 result", "%1 results", num_results)
+            self.statusBar().showMessage(msg)
+            self.m_progress.setRange(0, 1)
+
+    #--------------------------------------------------------------------------
     def addThumbnail(self, name, image, title, fetch_url):
         item = QListWidgetItem(title)
         item.setData(Qt.DecorationRole, fitImage(image, self.m_icon_size))
         item.setData(self.NameRole, name)
         item.setData(self.FetchUrlRole, fetch_url)
         self.m_list.addItem(item)
+        self.updateStatus()
 
 #==============================================================================
 # kate: replace-tabs on; replace-tabs-save on; indent-width 4;

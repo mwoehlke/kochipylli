@@ -30,7 +30,9 @@ class Service(QObject):
     def __init__(self, archive, parent = None):
         QObject.__init__(self, parent)
         self.m_window = None
+        self.m_navbar = None
         self.m_net_manager = QNetworkAccessManager(self)
+        self.m_outstanding_requests = 0
 
         self.m_existing_files = {}
         self.m_results = {}
@@ -49,6 +51,10 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     def bind(self, window):
         self.m_window = window
+
+    #--------------------------------------------------------------------------
+    def createNav(self, navbar):
+        self.m_navbar = navbar
 
     #--------------------------------------------------------------------------
     # Database Interaction
@@ -81,8 +87,27 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     # Web Interaction
     #--------------------------------------------------------------------------
+    def request(self, url):
+        self.updateJobs(+1)
         reply = self.m_net_manager.get(QNetworkRequest(QUrl(url)))
         reply.error.connect(reply.deleteLater)
+        reply.error.connect(self.releaseJob)
+        reply.finished.connect(self.releaseJob)
+        return reply
+
+    #--------------------------------------------------------------------------
+    def releaseJob(self):
+        self.updateJobs(-1)
+
+    #--------------------------------------------------------------------------
+    def updateJobs(self, delta):
+        self.m_outstanding_requests += delta
+        self.m_window.setActiveJobs(self.m_outstanding_requests)
+        self.m_navbar.setEnabled(self.m_outstanding_requests <= 0)
+
+    #--------------------------------------------------------------------------
+    def requestImageListing(self, url):
+        reply = self.request(url)
         reply.finished.connect(self.dispatchImageListingRequest)
 
     #--------------------------------------------------------------------------
@@ -94,11 +119,10 @@ class Service(QObject):
 
     #--------------------------------------------------------------------------
     def getThumbnail(self, thumb_url, name, title, fetch_url):
-        reply = self.m_net_manager.get(QNetworkRequest(QUrl(thumb_url)))
+        reply = self.request(thumb_url)
         reply.setProperty("name", name)
         reply.setProperty("title", title)
         reply.setProperty("fetch_url", fetch_url)
-        reply.error.connect(reply.deleteLater)
         reply.finished.connect(self.addReadyThumbnail)
 
     #--------------------------------------------------------------------------
