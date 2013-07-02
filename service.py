@@ -39,11 +39,18 @@ class Service(QObject):
         self.m_database_entries = {}
 
         self.m_archive = QDir(archive)
-        self.m_database_dir = QDir(archive.path() + "/.kochipylli/database")
-        self.m_results_dir = QDir(archive.path() + "/.kochipylli/results")
+        archive_path = self.m_archive.canonicalPath()
+
+        self.m_database_dir = QDir(archive_path + "/.kochipylli/database")
+        self.m_results_dir = QDir(archive_path + "/.kochipylli/results")
+
+        results_path = self.m_results_dir.canonicalPath()
+        self.m_results_info_path = QDir(results_path + "/info")
+        self.m_results_thumbs_path = QDir(results_path + "/thumbnails")
 
         archive.mkpath(self.m_database_dir.path())
-        archive.mkpath(self.m_results_dir.path())
+        archive.mkpath(self.m_results_info_path.path())
+        archive.mkpath(self.m_results_thumbs_path.path())
 
         listFiles(self.m_existing_files, archive)
         self.readDatabase()
@@ -83,6 +90,50 @@ class Service(QObject):
         line = QString("%1=%2\n").arg(key, value)
         r = self.m_database.write(line.toUtf8())
         self.m_database.flush()
+
+    #--------------------------------------------------------------------------
+    # Saved Results Management
+    #--------------------------------------------------------------------------
+    def saveResult(self, thumb_url, data, result_name, title, fetch_url):
+        thumb_ext = QFileInfo(thumb_url.path()).suffix()
+        thumb_name = QString("t_%1.%2").arg(result_name, thumb_ext)
+
+        info_path = self.m_results_info_path.path()
+        info_path = QString("%1/%2").arg(info_path, result_name)
+
+        info = QSettings(info_path, QSettings.IniFormat)
+        if info.status() != QSettings.NoError:
+            msg = i18n("Failed to write result info '%1'")
+            qDebug(msg.arg(info_path))
+            return
+
+        info.beginGroup("thumbnail")
+        info.setValue("name", thumb_name)
+        info.setValue("url", thumb_url)
+        info.endGroup()
+
+        info.beginGroup("result")
+        info.setValue("name", result_name)
+        info.setValue("title", title)
+        info.setValue("fetch_url", fetch_url)
+        info.endGroup()
+
+        if info.status() != QSettings.NoError:
+            msg = i18n("Failed to write result info '%1'")
+            qDebug(msg.arg(info_path))
+            return
+
+        thumb_path = self.m_results_thumbs_path.path()
+        thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
+
+        thumb = QFile(thumb_path)
+        if not thumb.open(QIODevice.WriteOnly):
+            msg = i18n("Failed to write result thumbnail '%1'")
+            qDebug(msg.arg(thumb_path))
+            return
+
+        thumb.write(data)
+        thumb.close()
 
     #--------------------------------------------------------------------------
     # Web Interaction
@@ -130,16 +181,19 @@ class Service(QObject):
         reply = self.sender()
         reply.deleteLater()
 
+        img_url = reply.url()
         image = QImage()
-        if not image.load(reply, None):
-            print "Failed to retrieve image from %s" % reply.url()
+        data = reply.readAll()
+        if not image.loadFromData(data):
+            qDebug(i18n("Failed to retrieve image from '%1'").arg(img_url))
             return
 
         name = reply.property("name").toString()
         title = reply.property("title").toString()
         fetch_url = reply.property("fetch_url").toString()
 
-        self.m_window.addThumbnail(name, image, title, fetch_url);
+        self.saveResult(img_url, data, name, title, fetch_url)
+        self.m_window.addThumbnail(name, image, title, fetch_url)
 
 #==============================================================================
 # kate: replace-tabs on; replace-tabs-save on; indent-width 4;
