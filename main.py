@@ -48,7 +48,7 @@ if __name__ == '__main__':
     service_module = importlib.import_module(str(args.arg(0)))
 
     app = KApplication()
-    mainWindow = MainWindow(service_module.createService(), archive)
+    mainWindow = MainWindow(service_module.createService(archive), archive)
     mainWindow.show()
     app.exec_()
 

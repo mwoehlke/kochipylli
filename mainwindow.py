@@ -39,7 +39,7 @@ class MainWindow(KMainWindow):
         self.resize(720, 480)
 
         self.m_service = service
-        service.bind(self, archive)
+        service.bind(self)
         self.m_icon_size = service.iconSize()
 
         # Create Gwenview part

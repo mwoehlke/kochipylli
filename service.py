@@ -27,20 +27,15 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     # Initialization
     #--------------------------------------------------------------------------
-    def __init__(self, parent = None):
+    def __init__(self, archive, parent = None):
         QObject.__init__(self, parent)
         self.m_window = None
-        self.m_archive = None
-        self.m_database = None
         self.m_net_manager = QNetworkAccessManager(self)
 
         self.m_existing_files = {}
         self.m_results = {}
         self.m_database_entries = {}
 
-    #--------------------------------------------------------------------------
-    def bind(self, window, archive):
-        self.m_window = window
         self.m_archive = QDir(archive)
         self.m_database_dir = QDir(archive.path() + "/.kochipylli/database")
         self.m_results_dir = QDir(archive.path() + "/.kochipylli/results")
@@ -50,6 +45,10 @@ class Service(QObject):
 
         listFiles(self.m_existing_files, archive)
         self.readDatabase()
+
+    #--------------------------------------------------------------------------
+    def bind(self, window):
+        self.m_window = window
 
     #--------------------------------------------------------------------------
     # Database Interaction
