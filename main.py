@@ -4,6 +4,8 @@
 import importlib
 import sys
 
+from PyQt4.QtCore import *
+
 from PyKDE4.kdecore import *
 from PyKDE4.kdeui import *
 
@@ -37,10 +39,16 @@ if __name__ == '__main__':
     if args.count() < 2:
         args.usageError(i18n("Not enough arguments"))
 
+    archive = QDir(args.arg(1))
+    if not archive.exists():
+        sys.stderr.write("Archive directory '%s' does not exist\n" %
+                         archive.path())
+        sys.exit(1)
+
     service_module = importlib.import_module(str(args.arg(0)))
 
     app = KApplication()
-    mainWindow = MainWindow(service_module.createService(), args.arg(1))
+    mainWindow = MainWindow(service_module.createService(), archive)
     mainWindow.show()
     app.exec_()
 
