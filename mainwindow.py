@@ -15,6 +15,7 @@ def fitImage(image, size):
         return QPixmap.fromImage(image)
 
     if image.width() > size.width() or image.height() > size.height():
+        size = QSize(size)
         size.scale(in_size, Qt.KeepAspectRatioByExpanding)
 
     in_center = QPointF(in_size.width() / 2, in_size.height() / 2)
