@@ -31,7 +31,11 @@ def fitImage(image, size):
 
 #==============================================================================
 class ResultList(QListWidget):
+    NameRole = Qt.UserRole + 0
+    FetchUrlRole = Qt.UserRole + 1
+
     resultRequested = pyqtSignal(QListWidgetItem)
+    resultDiscarded = pyqtSignal(QString)
 
     #--------------------------------------------------------------------------
     def __init__(self, parent = None):
@@ -56,11 +60,18 @@ class ResultList(QListWidget):
         item.setForeground(scheme.foreground(KColorScheme.VisitedText))
         self.resultRequested.emit(item)
 
+    #--------------------------------------------------------------------------
+    def deleteSelectedItems(self):
+        for item in self.selectedItems():
+            name = item.data(self.NameRole).toString()
+            self.resultDiscarded.emit(name)
+
+            item = self.takeItem(self.row(item))
+            item = None
+
+
 #==============================================================================
 class MainWindow(KMainWindow):
-    NameRole = Qt.UserRole + 0
-    FetchUrlRole = Qt.UserRole + 1
-
     #--------------------------------------------------------------------------
     def __init__(self, service, archive):
         KMainWindow.__init__(self)
@@ -94,6 +105,12 @@ class MainWindow(KMainWindow):
         dock = QDockWidget(i18n("Results"))
         dock.setWidget(listview)
         self.addDockWidget(Qt.BottomDockWidgetArea, dock)
+
+        shortcut = QShortcut(QKeySequence(Qt.Key_Delete), listview)
+        shortcut.setContext(Qt.WidgetShortcut)
+        shortcut.activated.connect(listview.deleteSelectedItems);
+
+        listview.resultDiscarded.connect(service.discardResult)
 
         # Create navigation bar
         navbar = QToolBar(i18n("Navigation"))
@@ -135,8 +152,8 @@ class MainWindow(KMainWindow):
     def addThumbnail(self, name, image, title, fetch_url):
         item = QListWidgetItem(title)
         item.setData(Qt.DecorationRole, fitImage(image, self.m_icon_size))
-        item.setData(self.NameRole, name)
-        item.setData(self.FetchUrlRole, fetch_url)
+        item.setData(ResultList.NameRole, name)
+        item.setData(ResultList.FetchUrlRole, fetch_url)
 
         scheme = KColorScheme(QPalette.Active)
         item.setForeground(scheme.foreground(KColorScheme.LinkText))

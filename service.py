@@ -176,6 +176,36 @@ class Service(QObject):
         thumb.close()
 
     #--------------------------------------------------------------------------
+    def deleteResult(self, name):
+        info_path = self.m_results_info_dir.path()
+        info_path = QString("%1/%2").arg(info_path, name)
+
+        info = QSettings(info_path, QSettings.IniFormat)
+        if info.status() != QSettings.NoError:
+            msg = i18n("Failed to read result info '%1'")
+            qDebug(msg.arg(path))
+            return
+
+        # Get thumbnail info
+        info.beginGroup("thumbnail")
+        thumb_name = info.value("name").toString()
+        info.endGroup()
+
+        info = None
+
+        # Remove result files
+        self.m_results_info_dir.remove(name)
+        self.m_results_thumbs_dir.remove(thumb_name)
+
+    #--------------------------------------------------------------------------
+    def discardResult(self, name):
+        # Delete result files
+        self.deleteResult(name)
+
+        # Write result to database so we don't fetch it again
+        self.writeDatabaseEntry(name, QString())
+
+    #--------------------------------------------------------------------------
     # Web Interaction
     #--------------------------------------------------------------------------
     def request(self, url):
