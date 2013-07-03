@@ -47,12 +47,12 @@ class Service(QObject):
         self.m_results_dir = QDir(archive_path + "/.kochipylli/results")
 
         results_path = self.m_results_dir.canonicalPath()
-        self.m_results_info_path = QDir(results_path + "/info")
-        self.m_results_thumbs_path = QDir(results_path + "/thumbnails")
+        self.m_results_info_dir = QDir(results_path + "/info")
+        self.m_results_thumbs_dir = QDir(results_path + "/thumbnails")
 
         archive.mkpath(self.m_database_dir.path())
-        archive.mkpath(self.m_results_info_path.path())
-        archive.mkpath(self.m_results_thumbs_path.path())
+        archive.mkpath(self.m_results_info_dir.path())
+        archive.mkpath(self.m_results_thumbs_dir.path())
 
         listFiles(self.m_existing_files, archive)
         self.readDatabase()
@@ -100,7 +100,7 @@ class Service(QObject):
         thumb_ext = QFileInfo(thumb_url.path()).suffix()
         thumb_name = QString("t_%1.%2").arg(result_name, thumb_ext)
 
-        info_path = self.m_results_info_path.path()
+        info_path = self.m_results_info_dir.path()
         info_path = QString("%1/%2").arg(info_path, result_name)
 
         info = QSettings(info_path, QSettings.IniFormat)
@@ -125,7 +125,7 @@ class Service(QObject):
             qDebug(msg.arg(info_path))
             return
 
-        thumb_path = self.m_results_thumbs_path.path()
+        thumb_path = self.m_results_thumbs_dir.path()
         thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
 
         thumb = QFile(thumb_path)
