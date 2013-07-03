@@ -122,11 +122,14 @@ class Service(QObject):
         fetch_url = info.value("fetch_url").toString()
         info.endGroup()
 
+        self.m_results[result_name] = { "title": title, "fetch_url": fetch_url }
+
         # Try to load saved result thumbnail
         thumb_path = self.m_results_thumbs_dir.path()
         thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
         image = QImage()
         if image.load(thumb_path):
+            self.m_results[result_name]["thumb_path"] = thumb_path
             self.m_window.addThumbnail(result_name, image, title, fetch_url)
             return
 
@@ -175,6 +178,9 @@ class Service(QObject):
         thumb.write(data)
         thumb.close()
 
+        result = self.m_results[result_name]
+        result["thumb_path"] = thumb_path
+
     #--------------------------------------------------------------------------
     def deleteResult(self, name):
         info_path = self.m_results_info_dir.path()
@@ -196,6 +202,10 @@ class Service(QObject):
         # Remove result files
         self.m_results_info_dir.remove(name)
         self.m_results_thumbs_dir.remove(thumb_name)
+
+        # Remove from internal result set
+        if name in self.m_results:
+            del self.m_results[name]
 
     #--------------------------------------------------------------------------
     def discardResult(self, name):
@@ -262,6 +272,7 @@ class Service(QObject):
         title = reply.property("title").toString()
         fetch_url = reply.property("fetch_url").toString()
 
+        self.m_results[name] = { "title": title, "fetch_url": fetch_url }
         self.saveResult(img_url, data, name, title, fetch_url)
         self.m_window.addThumbnail(name, image, title, fetch_url)
 
