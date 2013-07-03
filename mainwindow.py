@@ -30,6 +30,14 @@ def fitImage(image, size):
     return QPixmap.fromImage(result)
 
 #==============================================================================
+def isRequestEvent(event):
+    if event.button() == Qt.MiddleButton:
+        return True
+    if event.modifiers() & Qt.ControlModifier:
+        return True
+    return False
+
+#==============================================================================
 class ResultList(QListWidget):
     NameRole = Qt.UserRole + 0
     FetchUrlRole = Qt.UserRole + 1
@@ -44,7 +52,7 @@ class ResultList(QListWidget):
 
     #--------------------------------------------------------------------------
     def mousePressEvent(self, event):
-        if event.button() == Qt.MiddleButton:
+        if isRequestEvent(event):
             pos = event.pos()
             index = self.indexAt(pos)
             if index.isValid():
