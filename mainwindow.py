@@ -99,10 +99,12 @@ class MainWindow(KMainWindow):
         part_service = KService.serviceByDesktopName("gvpart");
         factory = KPluginLoader(part_service.library()).factory()
         part = factory.create(self)
-        part.destroyed.connect(self.deleteLater)
+        self.m_viewer = part
 
         # Create image list
         listview = ResultList()
+        self.m_list = listview
+
         listview.setViewMode(QListView.IconMode)
         listview.setFlow(QListView.TopToBottom)
         listview.setResizeMode(QListView.Adjust)
@@ -119,6 +121,8 @@ class MainWindow(KMainWindow):
 
         listview.resultDiscarded.connect(service.discardResult)
 
+        listview.itemClicked.connect(self.showResult)
+
         # Create navigation bar
         navbar = QToolBar(i18n("Navigation"))
         service.createNav(navbar)
@@ -131,9 +135,6 @@ class MainWindow(KMainWindow):
         splitter.addWidget(part.widget())
         splitter.setSizes([144, 560])
         self.setCentralWidget(splitter)
-
-        self.m_viewer = part
-        self.m_list = listview
 
         # Load previous results
         service.loadResults()
@@ -167,6 +168,12 @@ class MainWindow(KMainWindow):
 
         self.m_list.addItem(item)
         self.updateStatus()
+
+    #--------------------------------------------------------------------------
+    def showResult(self, item):
+        name = item.data(ResultList.NameRole).toString()
+        image_path = self.m_service.resultImagePath(name)
+        self.m_viewer.openUrl(KUrl.fromPath(image_path))
 
 #==============================================================================
 # kate: replace-tabs on; replace-tabs-save on; indent-width 4;

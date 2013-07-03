@@ -58,12 +58,23 @@ class Service(QObject):
         self.readDatabase()
 
     #--------------------------------------------------------------------------
+    # UI Interaction
+    #--------------------------------------------------------------------------
     def bind(self, window):
         self.m_window = window
 
     #--------------------------------------------------------------------------
     def createNav(self, navbar):
         self.m_navbar = navbar
+
+    #--------------------------------------------------------------------------
+    def resultImagePath(self, name):
+        if name in self.m_results:
+            result = self.m_results[name]
+            if "thumb_path" in result:
+                return result["thumb_path"]
+
+        return None
 
     #--------------------------------------------------------------------------
     # Database Interaction
