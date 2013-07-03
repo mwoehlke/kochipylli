@@ -84,6 +84,9 @@ class MainWindow(KMainWindow):
         self.m_viewer = part
         self.m_list = listview
 
+        # Load previous results
+        service.loadResults()
+
     #--------------------------------------------------------------------------
     def setActiveJobs(self, jobs):
         self.m_active_jobs = jobs

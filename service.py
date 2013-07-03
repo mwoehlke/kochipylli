@@ -96,6 +96,44 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     # Saved Results Management
     #--------------------------------------------------------------------------
+    def loadResults(self):
+        path_str = self.m_results_info_dir.path()
+        for result in self.m_results_info_dir.entryList(QDir.Files):
+            self.loadResult(QDir(path_str + "/" + result).canonicalPath())
+
+    #--------------------------------------------------------------------------
+    def loadResult(self, path):
+        info = QSettings(path, QSettings.IniFormat)
+        if info.status() != QSettings.NoError:
+            msg = i18n("Failed to read result info '%1'")
+            qDebug(msg.arg(path))
+            return
+
+        # Get thumbnail info
+        info.beginGroup("thumbnail")
+        thumb_name = info.value("name").toString()
+        thumb_url = info.value("url").toUrl()
+        info.endGroup()
+
+        # Get result info
+        info.beginGroup("result")
+        result_name = info.value("name").toString()
+        title = info.value("title").toString()
+        fetch_url = info.value("fetch_url").toString()
+        info.endGroup()
+
+        # Try to load saved result thumbnail
+        thumb_path = self.m_results_thumbs_dir.path()
+        thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
+        image = QImage()
+        if image.load(thumb_path):
+            self.m_window.addThumbnail(result_name, image, title, fetch_url)
+            return
+
+        # If loading from disk fails, try to fetch again
+        self.getThumbnail(thumb_url, result_name, title, fetch_url)
+
+    #--------------------------------------------------------------------------
     def saveResult(self, thumb_url, data, result_name, title, fetch_url):
         thumb_ext = QFileInfo(thumb_url.path()).suffix()
         thumb_name = QString("t_%1.%2").arg(result_name, thumb_ext)
