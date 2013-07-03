@@ -48,7 +48,7 @@ class ResultList(QListWidget):
     #--------------------------------------------------------------------------
     def __init__(self, parent = None):
         QListWidget.__init__(self, parent)
-        self.itemDoubleClicked.connect(self.requestItem)
+        self.itemActivated.connect(self.requestItem)
 
     #--------------------------------------------------------------------------
     def mousePressEvent(self, event):
@@ -121,7 +121,7 @@ class MainWindow(KMainWindow):
 
         listview.resultDiscarded.connect(service.discardResult)
 
-        listview.itemClicked.connect(self.showResult)
+        listview.currentItemChanged.connect(self.showResult)
 
         # Create navigation bar
         navbar = QToolBar(i18n("Navigation"))
