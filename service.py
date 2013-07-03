@@ -10,9 +10,11 @@ from PyQt4.QtNetwork import *
 
 #==============================================================================
 def listFiles(out, path):
+    path_str = path.path()
+
     # Get files
     for entry in path.entryList(QDir.Files):
-        full_path = QDir(path.path() + "/" + entry).canonicalPath()
+        full_path = QDir(path_str + "/" + entry).canonicalPath()
         if entry in out:
             out[entry] += [full_path]
         else:
@@ -20,7 +22,7 @@ def listFiles(out, path):
 
     # Recurse through directories
     for entry in path.entryList(QDir.Dirs | QDir.NoDotAndDotDot):
-        listFiles(out, QDir(path.path() + "/" + entry))
+        listFiles(out, QDir(path_str + "/" + entry))
 
 #==============================================================================
 class Service(QObject):
