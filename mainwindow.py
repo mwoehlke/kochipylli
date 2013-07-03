@@ -77,7 +77,6 @@ class ResultList(QListWidget):
             item = self.takeItem(self.row(item))
             item = None
 
-
 #==============================================================================
 class MainWindow(KMainWindow):
     #--------------------------------------------------------------------------
