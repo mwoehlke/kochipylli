@@ -125,13 +125,22 @@ class MainWindow(KMainWindow):
 
         # Create navigation bar
         navbar = QToolBar(i18n("Navigation"))
-        service.createNav(navbar)
+        service.setupNavigationBar(navbar)
         self.addToolBar(navbar)
+
+        # Create result info pane
+        info_widget = QWidget()
+        service.setupInformationPane(info_widget)
+
+        info_pane = QStackedWidget()
+        info_pane.addWidget(QWidget())
+        info_pane.addWidget(info_widget)
+        self.m_info_pane = info_pane
 
         # Create central widget
         splitter = QSplitter()
         splitter.setOrientation(Qt.Horizontal)
-        splitter.addWidget(QWidget())
+        splitter.addWidget(info_pane)
         splitter.addWidget(part.widget())
         splitter.setSizes([144, 560])
         self.setCentralWidget(splitter)
@@ -171,8 +180,18 @@ class MainWindow(KMainWindow):
 
     #--------------------------------------------------------------------------
     def showResult(self, item):
+        if item is None:
+            self.m_info_pane.setCurrentIndex(0)
+            return
+
         name = item.data(ResultList.NameRole).toString()
         image_path = self.m_service.resultImagePath(name)
+
+        if self.m_service.populateResultInfoPane(self.m_info_pane, name):
+            self.m_info_pane.setCurrentIndex(1)
+        else:
+            self.m_info_pane.setCurrentIndex(0)
+
         self.m_viewer.openUrl(KUrl.fromPath(image_path))
 
 #==============================================================================

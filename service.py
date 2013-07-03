@@ -36,6 +36,10 @@ class Service(QObject):
         self.m_net_manager = QNetworkAccessManager(self)
         self.m_outstanding_requests = 0
 
+        self.m_info_pane_layout = None
+        self.m_info_pane_id = None
+        self.m_info_pane_title = None
+
         self.m_existing_files = {}
         self.m_results = {}
         self.m_database_entries = {}
@@ -64,8 +68,28 @@ class Service(QObject):
         self.m_window = window
 
     #--------------------------------------------------------------------------
-    def createNav(self, navbar):
+    def setupNavigationBar(self, navbar):
         self.m_navbar = navbar
+
+    #--------------------------------------------------------------------------
+    def addInfoLabel(self, caption):
+        caption_label = QLabel(caption)
+
+        value_label = KSqueezedTextLabel()
+        value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        value_label.setTextElideMode(Qt.ElideRight)
+
+        self.m_info_pane_layout.addRow(caption_label, value_label)
+
+        return value_label
+
+    #--------------------------------------------------------------------------
+    def setupInformationPane(self, pane):
+        self.m_info_pane_layout = QFormLayout()
+        pane.setLayout(self.m_info_pane_layout)
+
+        self.m_info_pane_id = self.addInfoLabel("ID:")
+        self.m_info_pane_title = self.addInfoLabel("Title:")
 
     #--------------------------------------------------------------------------
     def resultImagePath(self, name):
@@ -75,6 +99,16 @@ class Service(QObject):
                 return result["thumb_path"]
 
         return None
+
+    #--------------------------------------------------------------------------
+    def populateResultInfoPane(self, pane, result_name):
+        self.m_info_pane_id.setText(result_name)
+        if result_name in self.m_results:
+            result = self.m_results[result_name]
+            if "title" in result:
+                self.m_info_pane_title.setText(result["title"])
+
+        return True
 
     #--------------------------------------------------------------------------
     # Database Interaction
