@@ -30,6 +30,33 @@ def fitImage(image, size):
     return QPixmap.fromImage(result)
 
 #==============================================================================
+class ResultList(QListWidget):
+    resultRequested = pyqtSignal(QListWidgetItem)
+
+    #--------------------------------------------------------------------------
+    def __init__(self, parent = None):
+        QListWidget.__init__(self, parent)
+        self.itemDoubleClicked.connect(self.requestItem)
+
+    #--------------------------------------------------------------------------
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            pos = event.pos()
+            index = self.indexAt(pos)
+            if index.isValid():
+                item = self.itemFromIndex(index)
+                if item is not None:
+                    self.requestItem(item)
+
+        QListWidget.mousePressEvent(self, event)
+
+    #--------------------------------------------------------------------------
+    def requestItem(self, item):
+        scheme = KColorScheme(QPalette.Active)
+        item.setForeground(scheme.foreground(KColorScheme.VisitedText))
+        self.resultRequested.emit(item)
+
+#==============================================================================
 class MainWindow(KMainWindow):
     NameRole = Qt.UserRole + 0
     FetchUrlRole = Qt.UserRole + 1
@@ -57,7 +84,7 @@ class MainWindow(KMainWindow):
         part.destroyed.connect(self.deleteLater)
 
         # Create image list
-        listview = QListWidget()
+        listview = ResultList()
         listview.setViewMode(QListView.IconMode)
         listview.setFlow(QListView.TopToBottom)
         listview.setResizeMode(QListView.Adjust)
@@ -110,6 +137,10 @@ class MainWindow(KMainWindow):
         item.setData(Qt.DecorationRole, fitImage(image, self.m_icon_size))
         item.setData(self.NameRole, name)
         item.setData(self.FetchUrlRole, fetch_url)
+
+        scheme = KColorScheme(QPalette.Active)
+        item.setForeground(scheme.foreground(KColorScheme.LinkText))
+
         self.m_list.addItem(item)
         self.updateStatus()
 
