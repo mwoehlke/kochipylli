@@ -266,7 +266,6 @@ class Service(QObject):
     def request(self, url):
         self.updateJobs(+1)
         reply = self.m_net_manager.get(QNetworkRequest(QUrl(url)))
-        reply.error.connect(reply.deleteLater)
         reply.error.connect(self.releaseJob)
         reply.finished.connect(self.releaseJob)
         return reply
@@ -274,6 +273,7 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     def releaseJob(self):
         self.updateJobs(-1)
+        self.sender().deleteLater()
 
     #--------------------------------------------------------------------------
     def updateJobs(self, delta):
@@ -291,7 +291,6 @@ class Service(QObject):
         reply = self.sender()
         data = reply.readAll()
         self.parseImageListingRequest(reply.url(), data)
-        reply.deleteLater()
 
     #--------------------------------------------------------------------------
     def getThumbnail(self, thumb_url, name, title, fetch_url):
@@ -304,7 +303,6 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     def addReadyThumbnail(self):
         reply = self.sender()
-        reply.deleteLater()
 
         img_url = reply.url()
         image = QImage()
