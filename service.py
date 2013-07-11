@@ -179,7 +179,7 @@ class Service(QObject):
             return
 
         # If loading from disk fails, try to fetch again
-        self.getThumbnail(thumb_url, result_name, title, fetch_url)
+        self.requestThumbnail(thumb_url, result_name, title, fetch_url)
 
     #--------------------------------------------------------------------------
     def saveResult(self, thumb_url, data, result_name, title, fetch_url):
@@ -293,7 +293,7 @@ class Service(QObject):
         self.parseImageListingRequest(reply.url(), data)
 
     #--------------------------------------------------------------------------
-    def getThumbnail(self, thumb_url, name, title, fetch_url):
+    def requestThumbnail(self, thumb_url, name, title, fetch_url):
         reply = self.request(thumb_url)
         reply.setProperty("name", name)
         reply.setProperty("title", title)
