@@ -79,7 +79,6 @@ class Service(QObject):
 
         value_label = KSqueezedTextLabel()
         value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        value_label.setTextElideMode(Qt.ElideRight)
 
         self.m_info_pane_layout.addRow(caption_label, value_label)
 
@@ -105,13 +104,18 @@ class Service(QObject):
         return None
 
     #--------------------------------------------------------------------------
-    def setInfoText(self, label, result, key):
+    def setInfoText(self, widget, result, key, wrap=False):
         if key in result:
-            label.setEnabled(True)
-            label.setText(result[key])
+            widget.setEnabled(True)
+            widget.setText(result[key])
+            if type(widget) is QLabel:
+                widget.setWordWrap(wrap)
+                widget.setTextElideMode(Qt.ElideNone if wrap else Qt.ElideRight)
         else:
-            label.setEnabled(False)
-            label.setText(i18n("(unavailable)"))
+            widget.setEnabled(False)
+            widget.setText(i18n("(unavailable)"))
+            if type(widget) is QLabel:
+                widget.setTextElideMode(Qt.ElideRight)
 
     #--------------------------------------------------------------------------
     def populateResultInfoPane(self, pane, result_name):
