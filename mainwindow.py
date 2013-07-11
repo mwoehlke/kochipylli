@@ -171,14 +171,18 @@ class MainWindow(KMainWindow):
             self.m_progress.setRange(0, 1)
 
     #--------------------------------------------------------------------------
-    def addThumbnail(self, name, image, title, fetch_url):
+    def addThumbnail(self, name, image, title, fetch_url, available=False):
         item = QListWidgetItem(title)
         item.setData(Qt.DecorationRole, fitImage(image, self.m_icon_size))
         item.setData(ResultList.NameRole, name)
         item.setData(ResultList.FetchUrlRole, fetch_url)
 
         scheme = KColorScheme(QPalette.Active)
-        item.setForeground(scheme.foreground(KColorScheme.LinkText))
+        color = KColorScheme.LinkText
+        if available:
+            color = KColorScheme.NormalText
+            # TODO PositiveText if already saved
+        item.setForeground(scheme.foreground(color))
 
         self.m_items[name] = item
         self.m_list.addItem(item)

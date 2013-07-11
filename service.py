@@ -195,6 +195,8 @@ class Service(QObject):
         result_name = info.value("name").toString()
         title = info.value("title").toString()
         fetch_url = info.value("fetch_url").toString()
+        image_name = info.value("image_name").toString()
+        cache_name = info.value("cache_name").toString()
         info.endGroup()
 
         self.m_results[result_name] = { "title": title, "fetch_url": fetch_url }
@@ -204,8 +206,20 @@ class Service(QObject):
         thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
         image = QImage()
         if image.load(thumb_path):
-            self.m_results[result_name]["thumb_path"] = thumb_path
-            self.m_window.addThumbnail(result_name, image, title, fetch_url)
+            result = self.m_results[result_name]
+            result["title"] = title
+            result["thumb_path"] = thumb_path
+            available = not image_name.isEmpty() and not cache_name.isEmpty()
+            if available:
+                result["image_name"] = image_name
+                result["cache_name"] = cache_name
+
+                cache_path = self.m_results_images_dir.path()
+                cache_path = QString("%1/%2").arg(cache_path, cache_name)
+                result["cache_path"] = cache_path
+
+            self.m_window.addThumbnail(result_name, image, title,
+                                       fetch_url, available)
             return
 
         # If loading from disk fails, try to fetch again
