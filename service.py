@@ -141,6 +141,32 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     # Saved Results Management
     #--------------------------------------------------------------------------
+    def resultInfo(self, result_name, read_only=False):
+        info_path = self.m_results_info_dir.path()
+        info_path = QString("%1/%2").arg(info_path, result_name)
+
+        info = QSettings(info_path, QSettings.IniFormat)
+        if info.status() != QSettings.NoError:
+            msg = None
+            if read_only:
+                msg = i18n("Failed to read result info '%1'")
+            else:
+                msg = i18n("Failed to write result info '%1'")
+            qDebug(msg.arg(info_path))
+            return None
+
+        return info
+
+    #--------------------------------------------------------------------------
+    def saveResultInfo(self, info):
+        info.sync()
+        if info.status() != QSettings.NoError:
+            msg = i18n("Failed to write result info '%1'")
+            qDebug(msg.arg(info_path))
+            return False
+        return True
+
+    #--------------------------------------------------------------------------
     def loadResults(self):
         path_str = self.m_results_info_dir.path()
         for result in self.m_results_info_dir.entryList(QDir.Files):
@@ -186,13 +212,8 @@ class Service(QObject):
         thumb_ext = QFileInfo(thumb_url.path()).suffix()
         thumb_name = QString("t_%1.%2").arg(result_name, thumb_ext)
 
-        info_path = self.m_results_info_dir.path()
-        info_path = QString("%1/%2").arg(info_path, result_name)
-
-        info = QSettings(info_path, QSettings.IniFormat)
-        if info.status() != QSettings.NoError:
-            msg = i18n("Failed to write result info '%1'")
-            qDebug(msg.arg(info_path))
+        info = self.resultInfo(result_name)
+        if info is None:
             return
 
         info.beginGroup("thumbnail")
@@ -206,9 +227,7 @@ class Service(QObject):
         info.setValue("fetch_url", fetch_url)
         info.endGroup()
 
-        if info.status() != QSettings.NoError:
-            msg = i18n("Failed to write result info '%1'")
-            qDebug(msg.arg(info_path))
+        if not self.saveResultInfo(info):
             return
 
         thumb_path = self.m_results_thumbs_dir.path()
