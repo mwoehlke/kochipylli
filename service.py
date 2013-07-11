@@ -105,12 +105,20 @@ class Service(QObject):
         return None
 
     #--------------------------------------------------------------------------
+    def setInfoText(self, label, result, key):
+        if key in result:
+            label.setEnabled(True)
+            label.setText(result[key])
+        else:
+            label.setEnabled(False)
+            label.setText(i18n("(unavailable)"))
+
+    #--------------------------------------------------------------------------
     def populateResultInfoPane(self, pane, result_name):
         self.m_info_pane_id.setText(result_name)
         if result_name in self.m_results:
             result = self.m_results[result_name]
-            if "title" in result:
-                self.m_info_pane_title.setText(result["title"])
+            self.setInfoText(self.m_info_pane_title, result, "title")
 
         return True
 
