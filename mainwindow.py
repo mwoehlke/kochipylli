@@ -42,7 +42,7 @@ class ResultList(QListWidget):
     NameRole = Qt.UserRole + 0
     FetchUrlRole = Qt.UserRole + 1
 
-    resultRequested = pyqtSignal(QListWidgetItem)
+    resultRequested = pyqtSignal(QString, QString)
     resultDiscarded = pyqtSignal(QString)
 
     #--------------------------------------------------------------------------
@@ -66,7 +66,10 @@ class ResultList(QListWidget):
     def requestItem(self, item):
         scheme = KColorScheme(QPalette.Active)
         item.setForeground(scheme.foreground(KColorScheme.VisitedText))
-        self.resultRequested.emit(item)
+
+        name = item.data(ResultList.NameRole).toString()
+        fetch_url = item.data(ResultList.FetchUrlRole).toString()
+        self.resultRequested.emit(name, fetch_url)
 
     #--------------------------------------------------------------------------
     def deleteSelectedItems(self):
@@ -89,6 +92,7 @@ class MainWindow(KMainWindow):
         self.m_progress.setMaximumWidth(200)
         self.statusBar().addPermanentWidget(self.m_progress)
         self.m_active_jobs = 0
+        self.m_items = {}
 
         # Bind service
         self.m_service = service
@@ -119,6 +123,7 @@ class MainWindow(KMainWindow):
         shortcut.setContext(Qt.WidgetShortcut)
         shortcut.activated.connect(listview.deleteSelectedItems);
 
+        listview.resultRequested.connect(service.requestResult)
         listview.resultDiscarded.connect(service.discardResult)
 
         listview.currentItemChanged.connect(self.showResult)
@@ -175,8 +180,19 @@ class MainWindow(KMainWindow):
         scheme = KColorScheme(QPalette.Active)
         item.setForeground(scheme.foreground(KColorScheme.LinkText))
 
+        self.m_items[name] = item
         self.m_list.addItem(item)
         self.updateStatus()
+
+    #--------------------------------------------------------------------------
+    def updateResult(self, name, completed=False):
+        item = self.m_items[name]
+        if item == self.m_list.currentItem():
+            self.showResult(item)
+
+        if completed:
+            scheme = KColorScheme(QPalette.Active)
+            item.setForeground(scheme.foreground(KColorScheme.NormalText))
 
     #--------------------------------------------------------------------------
     def showResult(self, item):

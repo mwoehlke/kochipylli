@@ -53,10 +53,12 @@ class Service(QObject):
         results_path = self.m_results_dir.canonicalPath()
         self.m_results_info_dir = QDir(results_path + "/info")
         self.m_results_thumbs_dir = QDir(results_path + "/thumbnails")
+        self.m_results_images_dir = QDir(results_path + "/images")
 
         archive.mkpath(self.m_database_dir.path())
         archive.mkpath(self.m_results_info_dir.path())
         archive.mkpath(self.m_results_thumbs_dir.path())
+        archive.mkpath(self.m_results_images_dir.path())
 
         listFiles(self.m_existing_files, archive)
         self.readDatabase()
@@ -95,6 +97,8 @@ class Service(QObject):
     def resultImagePath(self, name):
         if name in self.m_results:
             result = self.m_results[name]
+            if "cache_path" in result:
+                return result["cache_path"]
             if "thumb_path" in result:
                 return result["thumb_path"]
 
@@ -246,6 +250,41 @@ class Service(QObject):
         result["thumb_path"] = thumb_path
 
     #--------------------------------------------------------------------------
+    def saveResultImage(self, result_name, image_url, data):
+        image_info = QFileInfo(image_url.path())
+        image_name = image_info.fileName()
+        image_ext = image_info.suffix()
+        cache_name = QString("%1.%2").arg(result_name, image_ext)
+
+        info = self.resultInfo(result_name)
+        if info is None:
+            return
+
+        info.beginGroup("result")
+        info.setValue("image_name", image_name)
+        info.setValue("cache_name", cache_name)
+        info.endGroup()
+
+        if not self.saveResultInfo(info):
+            return
+
+        cache_path = self.m_results_images_dir.path()
+        cache_path = QString("%1/%2").arg(cache_path, cache_name)
+
+        image = QFile(cache_path)
+        if not image.open(QIODevice.WriteOnly):
+            msg = i18n("Failed to write result image '%1'")
+            qDebug(msg.arg(cache_path))
+            return
+
+        image.write(data)
+        image.close()
+
+        result = self.m_results[result_name]
+        result["image_name"] = image_name
+        result["cache_path"] = cache_path
+
+    #--------------------------------------------------------------------------
     def deleteResult(self, name):
         info_path = self.m_results_info_dir.path()
         info_path = QString("%1/%2").arg(info_path, name)
@@ -261,11 +300,17 @@ class Service(QObject):
         thumb_name = info.value("name").toString()
         info.endGroup()
 
+        info.beginGroup("result")
+        cache_name = info.value("cache_name").toString()
+        info.endGroup()
+
         info = None
 
         # Remove result files
         self.m_results_info_dir.remove(name)
         self.m_results_thumbs_dir.remove(thumb_name)
+        if not cache_name.isEmpty():
+            self.m_results_images_dir.remove(cache_name)
 
         # Remove from internal result set
         if name in self.m_results:
@@ -337,6 +382,32 @@ class Service(QObject):
         self.m_results[name] = { "title": title, "fetch_url": fetch_url }
         self.saveResult(img_url, data, name, title, fetch_url)
         self.m_window.addThumbnail(name, image, title, fetch_url)
+
+    #--------------------------------------------------------------------------
+    def requestResult(self, name, url):
+        reply = self.request(url)
+        reply.setProperty("name", name)
+        reply.finished.connect(self.dispatchResultRequest)
+
+    #--------------------------------------------------------------------------
+    def dispatchResultRequest(self):
+        reply = self.sender()
+        data = reply.readAll()
+        self.parseResultRequest(reply.url(), data)
+
+    #--------------------------------------------------------------------------
+    def requestResultImage(self, name, url):
+        reply = self.request(url)
+        reply.setProperty("name", name)
+        reply.finished.connect(self.dispatchResultImageRequest)
+
+    #--------------------------------------------------------------------------
+    def dispatchResultImageRequest(self):
+        reply = self.sender()
+
+        name = reply.property("name").toString()
+        self.saveResultImage(name, reply.url(), reply.readAll())
+        self.m_window.updateResult(name, completed=True)
 
 #==============================================================================
 # kate: replace-tabs on; replace-tabs-save on; indent-width 4;
