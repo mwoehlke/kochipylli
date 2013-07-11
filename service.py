@@ -212,6 +212,7 @@ class Service(QObject):
         info.endGroup()
 
         self.m_results[result_name] = { "title": title, "fetch_url": fetch_url }
+        self.loadResultInfo(self.m_results[result_name], info)
 
         # Try to load saved result thumbnail
         thumb_path = self.m_results_thumbs_dir.path()
@@ -236,6 +237,10 @@ class Service(QObject):
 
         # If loading from disk fails, try to fetch again
         self.requestThumbnail(thumb_url, result_name, title, fetch_url)
+
+    #--------------------------------------------------------------------------
+    def loadResultInfo(self, result, info):
+        pass
 
     #--------------------------------------------------------------------------
     def saveResult(self, thumb_url, data, result_name, title, fetch_url):
