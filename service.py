@@ -74,10 +74,10 @@ class Service(QObject):
         self.m_navbar = navbar
 
     #--------------------------------------------------------------------------
-    def addInfoLabel(self, caption):
+    def addInfoLabel(self, caption, widget=KSqueezedTextLabel):
         caption_label = QLabel(caption)
 
-        value_label = KSqueezedTextLabel()
+        value_label = widget()
         value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
         self.m_info_pane_layout.addRow(caption_label, value_label)
@@ -104,17 +104,21 @@ class Service(QObject):
         return None
 
     #--------------------------------------------------------------------------
-    def setInfoText(self, widget, result, key, wrap=False):
+    def setInfoText(self, widget, result, key, wrap=False, parser=None):
         if key in result:
+            value = result[key]
+            widget.setText(value if parser is None else parser(value))
             widget.setEnabled(True)
-            widget.setText(result[key])
+
             if type(widget) is QLabel:
                 widget.setWordWrap(wrap)
+            if type(widget) is KSqueezedTextLabel:
                 widget.setTextElideMode(Qt.ElideNone if wrap else Qt.ElideRight)
         else:
-            widget.setEnabled(False)
             widget.setText(i18n("(unavailable)"))
-            if type(widget) is QLabel:
+            widget.setEnabled(False)
+
+            if type(widget) is KSqueezedTextLabel:
                 widget.setTextElideMode(Qt.ElideRight)
 
     #--------------------------------------------------------------------------
