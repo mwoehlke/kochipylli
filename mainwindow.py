@@ -126,6 +126,8 @@ class MainWindow(KMainWindow):
         listview.resultRequested.connect(service.requestResult)
         listview.resultDiscarded.connect(service.discardResult)
 
+        listview.resultDiscarded.connect(self.updateStatus)
+
         listview.currentItemChanged.connect(self.showResult)
 
         # Create navigation bar
