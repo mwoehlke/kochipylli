@@ -152,6 +152,51 @@ class MainWindow(KMainWindow):
         service.setupNavigationBar(navbar)
         self.addToolBar(navbar)
 
+        # Create I/O bar
+        iobar = QToolBar(i18n("File"))
+
+        iobar_tools = QWidget()
+        iobar_tools_layout = QHBoxLayout()
+        iobar_tools_layout.setContentsMargins(0, 0, 0, 0)
+        iobar_tools.setLayout(iobar_tools_layout)
+
+        io_discard = QToolButton()
+        io_discard.setText(i18n("Discard"))
+        io_discard.setToolTip(i18n("Discard the selected result"))
+        io_discard.setIcon(KIcon("user-trash"))
+        io_discard.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+        io_discard.setEnabled(False)
+        io_discard.clicked.connect(listview.deleteSelectedItems)
+        self.m_action_discard_result = io_discard
+
+        io_save = QToolButton()
+        io_save.setText(i18n("Save"))
+        io_save.setToolTip(i18n("Save result to the currently selected folder"))
+        io_save.setIcon(KIcon("document-save"))
+        io_save.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+        io_save.setEnabled(False)
+        #io_save.triggered().connect(None) TODO
+        self.m_action_save_result = io_save
+
+        io_save_location = QComboBox() # TODO ArchiveDirCombo, set root
+        self.m_save_location = io_save_location
+
+        iobar_tools_layout.addWidget(io_discard)
+        iobar_tools_layout.addWidget(io_save)
+        iobar_tools_layout.addWidget(io_save_location)
+
+        iobar_save_location = QLabel()
+        self.m_result_saved_path = iobar_save_location
+
+        iobar_container = QStackedWidget()
+        iobar_container.addWidget(iobar_tools)
+        iobar_container.addWidget(iobar_save_location)
+        self.m_iobar_container = iobar_container
+        self.m_iobar_save_location = iobar_save_location
+
+        iobar.addWidget(iobar_container)
+        self.addToolBar(iobar)
+
         # Create result info pane
         info_widget = QWidget()
         service.setupInformationPane(info_widget)
@@ -221,16 +266,34 @@ class MainWindow(KMainWindow):
     def showResult(self, item):
         if item is None:
             self.m_info_pane.setCurrentIndex(0)
+            self.m_iobar_container.setCurrentIndex(1)
+            self.m_result_saved_path.clear()
+            self.m_action_discard_result.setEnabled(False)
+            self.m_action_save_result.setEnabled(False)
+            self.m_save_location.setEnabled(False)
             return
 
+        # Get result information
         name = item.data(ResultList.NameRole).toString()
         image_path = self.m_service.resultImagePath(name)
+        status = False # TODO get from service
 
+        # Populate information pane
         if self.m_service.populateResultInfoPane(self.m_info_pane, name):
             self.m_info_pane.setCurrentIndex(1)
         else:
             self.m_info_pane.setCurrentIndex(0)
 
+        # Enable/disable result actions or show saved location
+        self.m_action_discard_result.setEnabled(True)
+        if type(status) is QString:
+            self.m_iobar_container.setCurrentIndex(1)
+        else:
+            self.m_iobar_container.setCurrentIndex(0)
+            self.m_action_save_result.setEnabled(status)
+            self.m_save_location.setEnabled(status)
+
+        # Show result image
         self.m_viewer.openUrl(KUrl.fromPath(image_path))
 
 #==============================================================================
