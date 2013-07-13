@@ -30,12 +30,12 @@ if __name__ == '__main__':
                              homePage, bugEmail)
     KCmdLineArgs.init(sys.argv, aboutData)
 
-    options = KCmdLineOptions();
-    options.add("!+service", ki18n("Python service definition"));
-    options.add("!+archive", ki18n("Location of archive directory"));
-    KCmdLineArgs.addCmdLineOptions(options);
+    options = KCmdLineOptions()
+    options.add("!+service", ki18n("Python service definition"))
+    options.add("!+archive", ki18n("Location of archive directory"))
+    KCmdLineArgs.addCmdLineOptions(options)
 
-    args = KCmdLineArgs.parsedArgs();
+    args = KCmdLineArgs.parsedArgs()
     if args.count() < 2:
         args.usageError(i18n("Not enough arguments"))
 

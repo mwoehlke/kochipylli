@@ -117,7 +117,7 @@ class MainWindow(KMainWindow):
         self.m_icon_size = service.iconSize()
 
         # Create Gwenview part
-        part_service = KService.serviceByDesktopName("gvpart");
+        part_service = KService.serviceByDesktopName("gvpart")
         factory = KPluginLoader(part_service.library()).factory()
         part = factory.create(self)
         self.m_viewer = part
@@ -138,7 +138,7 @@ class MainWindow(KMainWindow):
 
         shortcut = QShortcut(QKeySequence(Qt.Key_Delete), listview)
         shortcut.setContext(Qt.WidgetShortcut)
-        shortcut.activated.connect(listview.deleteSelectedItems);
+        shortcut.activated.connect(listview.deleteSelectedItems)
 
         listview.resultRequested.connect(service.requestResult)
         listview.resultDiscarded.connect(service.discardResult)
