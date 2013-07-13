@@ -50,6 +50,11 @@ class ResultList(QListWidget):
         QListWidget.__init__(self, parent)
         self.itemActivated.connect(self.requestItem)
 
+        self.m_last_scroll_value = 0
+        self.m_scroll_bar = self.horizontalScrollBar()
+        self.m_scroll_bar.rangeChanged.connect(self.scrollRangeChanged)
+        self.m_scroll_bar.valueChanged.connect(self.scrollValueChanged)
+
     #--------------------------------------------------------------------------
     def mousePressEvent(self, event):
         if isRequestEvent(event):
@@ -79,6 +84,18 @@ class ResultList(QListWidget):
 
             item = self.takeItem(self.row(item))
             item = None
+
+    #--------------------------------------------------------------------------
+    def scrollRangeChanged(self, minimum, maximum):
+        current_value = self.m_scroll_bar.value()
+        if self.m_last_scroll_value != current_value:
+            self.m_scroll_bar.setValue(self.m_last_scroll_value)
+
+    #--------------------------------------------------------------------------
+    def scrollValueChanged(self, new_value):
+        maximum = self.m_scroll_bar.maximum()
+        if new_value < maximum or new_value > self.m_last_scroll_value:
+            self.m_last_scroll_value = new_value
 
 #==============================================================================
 class MainWindow(KMainWindow):
