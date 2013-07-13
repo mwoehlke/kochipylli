@@ -34,7 +34,8 @@ class Service(QObject):
         self.m_window = None
         self.m_navbar = None
         self.m_net_manager = QNetworkAccessManager(self)
-        self.m_outstanding_requests = 0
+        self.m_outstanding_requests = {}
+        self.m_outstanding_request_urls = set()
 
         self.m_info_pane_layout = None
         self.m_info_pane_id = None
@@ -363,26 +364,53 @@ class Service(QObject):
     # Web Interaction
     #--------------------------------------------------------------------------
     def request(self, url):
-        self.updateJobs(+1)
-        reply = self.m_net_manager.get(QNetworkRequest(QUrl(url)))
+        # Don't request anything that is already requested; we must use the
+        # encoded form as QUrl never matches in a set/dict (likely a bug)
+        url = QUrl(url)
+        encoded_url = url.toEncoded()
+        if encoded_url in self.m_outstanding_request_urls:
+            return None
+
+        # Issue the request
+        reply = self.m_net_manager.get(QNetworkRequest(url))
         reply.error.connect(self.releaseJob)
         reply.finished.connect(self.releaseJob)
+
+        # Update the outstanding requests information and status
+        self.m_outstanding_requests[reply] = encoded_url
+        self.m_outstanding_request_urls.add(encoded_url)
+        self.updateJobs()
+
+        # Return the response object
         return reply
 
     #--------------------------------------------------------------------------
     def releaseJob(self):
-        self.updateJobs(-1)
-        self.sender().deleteLater()
+        reply = self.sender()
+
+        # Delete the reply so it is not leaked
+        reply.deleteLater()
+
+        # Remove the request from the outstanding requests information
+        request_encoded_url = self.m_outstanding_requests[reply]
+        self.m_outstanding_request_urls.discard(request_encoded_url)
+        del self.m_outstanding_requests[reply]
+
+        # Update outstanding requests status
+        self.updateJobs()
 
     #--------------------------------------------------------------------------
-    def updateJobs(self, delta):
-        self.m_outstanding_requests += delta
-        self.m_window.setActiveJobs(self.m_outstanding_requests)
-        self.m_navbar.setEnabled(self.m_outstanding_requests <= 0)
+    def updateJobs(self):
+        outstanding_requests_count = len(self.m_outstanding_requests)
+        self.m_window.setActiveJobs(outstanding_requests_count)
+        self.m_navbar.setEnabled(outstanding_requests_count <= 0)
 
     #--------------------------------------------------------------------------
     def requestImageListing(self, url):
         reply = self.request(url)
+        if reply is None:
+            return
+
         reply.finished.connect(self.dispatchImageListingRequest)
 
     #--------------------------------------------------------------------------
@@ -393,7 +421,17 @@ class Service(QObject):
 
     #--------------------------------------------------------------------------
     def requestThumbnail(self, thumb_url, name, title, fetch_url):
+        # Don't download results we already have in the working set
+        if name in self.m_results:
+            return
+
+        # Request the result thumbnail
         reply = self.request(thumb_url)
+        if reply is None:
+            return
+
+        # Store result information on the response object and set up to save
+        # the thumbnail when the download finishes
         reply.setProperty("name", name)
         reply.setProperty("title", title)
         reply.setProperty("fetch_url", fetch_url)
@@ -421,6 +459,9 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     def requestResult(self, name, url):
         reply = self.request(url)
+        if reply is None:
+            return
+
         reply.setProperty("name", name)
         reply.finished.connect(self.dispatchResultRequest)
 
@@ -433,6 +474,9 @@ class Service(QObject):
     #--------------------------------------------------------------------------
     def requestResultImage(self, name, url):
         reply = self.request(url)
+        if reply is None:
+            return
+
         reply.setProperty("name", name)
         reply.finished.connect(self.dispatchResultImageRequest)
 
