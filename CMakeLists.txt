@@ -5,6 +5,8 @@ find_package(PythonInterp REQUIRED)
 
 set(sources
   contextparser.py
+  kfiletreeview.py
+  kmetamodel.py
   main.py
   mainwindow.py
   service.py

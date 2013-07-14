@@ -8,6 +8,8 @@ from PyKDE4.kparts import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from kfiletreeview import KFileTreeView
+
 #------------------------------------------------------------------------------
 def fitImage(image, size):
     in_size = image.size()
@@ -178,7 +180,15 @@ class MainWindow(KMainWindow):
         #io_save.triggered().connect(None) TODO
         self.m_action_save_result = io_save
 
-        io_save_location = QComboBox() # TODO ArchiveDirCombo, set root
+        io_save_location = QComboBox()
+        dir_view = KFileTreeView()
+        dir_view.setDirOnlyMode(True)
+        dir_view.setRootUrl(KUrl(archive.canonicalPath()))
+        dir_model = dir_view.model()
+        io_save_location.setModel(dir_model)
+        io_save_location.setView(dir_view)
+        for col in range(1, dir_model.columnCount()):
+            dir_view.setColumnHidden(col, True)
         self.m_save_location = io_save_location
 
         iobar_tools_layout.addWidget(io_discard)
