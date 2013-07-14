@@ -8,7 +8,7 @@ from PyKDE4.kparts import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-#==============================================================================
+#------------------------------------------------------------------------------
 def fitImage(image, size):
     in_size = image.size()
     if in_size == size:
@@ -29,7 +29,7 @@ def fitImage(image, size):
 
     return QPixmap.fromImage(result)
 
-#==============================================================================
+#------------------------------------------------------------------------------
 def isRequestEvent(event):
     if event.button() == Qt.MiddleButton:
         return True

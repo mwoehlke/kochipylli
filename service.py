@@ -8,7 +8,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtNetwork import *
 
-#==============================================================================
+#------------------------------------------------------------------------------
 def listFiles(out, path):
     path_str = path.path()
 
