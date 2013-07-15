@@ -142,7 +142,7 @@ class KFileTreeView(QTreeView):
 
     #--------------------------------------------------------------------------
     def setCurrentUrl(self, url):
-        base_index = self.m_dptr.m_meta_model.indexForUrl(url)
+        base_index = self.m_dptr.m_dir_model.indexForUrl(url)
 
         if not base_index.isValid():
             self.m_dptr.m_dir_model.expandToUrl(url)
@@ -150,9 +150,10 @@ class KFileTreeView(QTreeView):
 
         mode = QItemSelectionModel.SelectCurrent
         proxy_index = self.m_dptr.m_dir_proxy_model.mapFromSource(base_index)
+        index = self.m_dptr.m_meta_model.mapFromSubModel(proxy_index)
         self.selectionModel().clearSelection()
-        self.selectionModel().setCurrentIndex(proxy_index, mode)
-        self.scrollTo(proxyIndex)
+        self.selectionModel().setCurrentIndex(index, mode)
+        self.scrollTo(index)
 
     #--------------------------------------------------------------------------
     def setRootUrl(self, url):
