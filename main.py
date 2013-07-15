@@ -22,7 +22,7 @@ if __name__ == '__main__':
     license     = KAboutData.License_GPL
     copyright   = ki18n("Copyright 2013 Matthew Woehlke")
     text        = KLocalizedString()
-    homePage    = ""
+    homePage    = "https://github.com/mwoehlke/kochipylli"
     bugEmail    = "mw_triad@users.sourceforge.net"
 
     aboutData   = KAboutData(appName, catalog, programName, version,
