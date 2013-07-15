@@ -3,6 +3,7 @@
 
 from PyKDE4.kdecore import *
 from PyKDE4.kdeui import *
+from PyKDE4.kio import *
 from PyKDE4.kparts import *
 
 from PyQt4.QtCore import *
@@ -192,11 +193,24 @@ class MainWindow(KMainWindow):
         io_save_location.setView(dir_view)
         for col in range(1, dir_model.columnCount()):
             dir_view.setColumnHidden(col, True)
+        io_save_location.setEnabled(False)
         self.m_save_location = io_save_location
+
+        msg = i18nc("@info>tooltip",
+                    "Create a new folder in the currently selected folder")
+        io_new_folder = QToolButton()
+        io_new_folder.setText(i18nc("@action:button", "New Folder"))
+        io_new_folder.setToolTip(msg)
+        io_new_folder.setIcon(KIcon("folder-new"))
+        io_new_folder.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+        io_new_folder.setEnabled(False)
+        io_new_folder.clicked.connect(self.createFolder)
+        self.m_action_create_folder = io_new_folder
 
         iobar_tools_layout.addWidget(io_discard)
         iobar_tools_layout.addWidget(io_save)
         iobar_tools_layout.addWidget(io_save_location)
+        iobar_tools_layout.addWidget(io_new_folder)
 
         iobar_save_location = QLabel()
         self.m_result_saved_path = iobar_save_location
@@ -284,6 +298,7 @@ class MainWindow(KMainWindow):
             self.m_action_discard_result.setEnabled(False)
             self.m_action_save_result.setEnabled(False)
             self.m_save_location.setEnabled(False)
+            self.m_action_create_folder.setEnabled(False)
             return
 
         # Get result information
@@ -305,9 +320,33 @@ class MainWindow(KMainWindow):
             self.m_iobar_container.setCurrentIndex(0)
             self.m_action_save_result.setEnabled(status)
             self.m_save_location.setEnabled(status)
+            self.m_action_create_folder.setEnabled(status)
 
         # Show result image
         self.m_viewer.openUrl(KUrl.fromPath(image_path))
+
+    #--------------------------------------------------------------------------
+    def createFolder(self):
+        dir_view = self.m_save_location.view()
+        current_url = dir_view.currentUrl()
+        parent_dir = QDir(current_url.toLocalFile())
+        parent_path = parent_dir.absolutePath()
+
+        dialog_title = i18nc("@title:dialog", "New Folder")
+        dialog_text = i18nc("@info", "Create new folder in:\n%1", parent_path)
+        default_name = i18nc("Default name for a new folder", "New Folder")
+        result = KInputDialog.getText(dialog_title, dialog_text,
+                                      default_name, self)
+        if not result[1]:
+            return
+
+        new_url = KUrl.fromPath(QString("%1/%2").arg(parent_path, result[0]))
+        check_mode = KIO.NetAccess.DestinationSide
+        if not KIO.NetAccess.exists(new_url, check_mode, self):
+            if not KIO.NetAccess.mkdir(new_url, self):
+                error_text = i18nc("@info", "Failed to create directory")
+                KMessageBox.sorry(self, error_text, error_title)
+                return
 
 #==============================================================================
 # kate: replace-tabs on; replace-tabs-save on; indent-width 4;
