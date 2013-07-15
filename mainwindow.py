@@ -134,7 +134,7 @@ class MainWindow(KMainWindow):
         listview.setLayoutMode(QListView.Batched)
         listview.setBatchSize(30)
         listview.setIconSize(self.m_icon_size)
-        dock = QDockWidget(i18n("Results"))
+        dock = QDockWidget(i18nc("@title:dock", "Results"))
         dock.setWidget(listview)
         self.addDockWidget(Qt.BottomDockWidgetArea, dock)
 
@@ -150,12 +150,12 @@ class MainWindow(KMainWindow):
         listview.currentItemChanged.connect(self.showResult)
 
         # Create navigation bar
-        navbar = QToolBar(i18n("Navigation"))
+        navbar = QToolBar(i18nc("@title:toolbar", "Navigation"))
         service.setupNavigationBar(navbar)
         self.addToolBar(navbar)
 
         # Create I/O bar
-        iobar = QToolBar(i18n("File"))
+        iobar = QToolBar(i18nc("@title:toolbar", "File"))
 
         iobar_tools = QWidget()
         iobar_tools_layout = QHBoxLayout()
@@ -163,17 +163,20 @@ class MainWindow(KMainWindow):
         iobar_tools.setLayout(iobar_tools_layout)
 
         io_discard = QToolButton()
-        io_discard.setText(i18n("Discard"))
-        io_discard.setToolTip(i18n("Discard the selected result"))
+        io_discard.setText(i18nc("@action:button", "Discard"))
+        io_discard.setToolTip(i18nc("@info>tooltip",
+                                    "Discard the selected result"))
         io_discard.setIcon(KIcon("user-trash"))
         io_discard.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         io_discard.setEnabled(False)
         io_discard.clicked.connect(listview.deleteSelectedItems)
         self.m_action_discard_result = io_discard
 
+        msg = i18nc("@info>tooltip",
+                    "Save result to the currently selected folder")
         io_save = QToolButton()
-        io_save.setText(i18n("Save"))
-        io_save.setToolTip(i18n("Save result to the currently selected folder"))
+        io_save.setText(i18nc("@action:button", "Save"))
+        io_save.setToolTip(msg)
         io_save.setIcon(KIcon("document-save"))
         io_save.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         io_save.setEnabled(False)

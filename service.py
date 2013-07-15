@@ -116,7 +116,7 @@ class Service(QObject):
             if type(widget) is KSqueezedTextLabel:
                 widget.setTextElideMode(Qt.ElideNone if wrap else Qt.ElideRight)
         else:
-            widget.setText(i18n("(unavailable)"))
+            widget.setText(i18nc("@info", "(unavailable)"))
             widget.setEnabled(False)
 
             if type(widget) is KSqueezedTextLabel:
@@ -170,10 +170,9 @@ class Service(QObject):
         if info.status() != QSettings.NoError:
             msg = None
             if read_only:
-                msg = i18n("Failed to read result info '%1'")
+                qDebug(i18n("Failed to read result info '%1'", info_path))
             else:
-                msg = i18n("Failed to write result info '%1'")
-            qDebug(msg.arg(info_path))
+                qDebug(i18n("Failed to write result info '%1'", info_path))
             return None
 
         return info
@@ -182,8 +181,7 @@ class Service(QObject):
     def saveResultInfo(self, info):
         info.sync()
         if info.status() != QSettings.NoError:
-            msg = i18n("Failed to write result info '%1'")
-            qDebug(msg.arg(info_path))
+            qDebug(i18n("Failed to write result info '%1'", info_path))
             return False
         return True
 
@@ -197,8 +195,7 @@ class Service(QObject):
     def loadResult(self, path):
         info = QSettings(path, QSettings.IniFormat)
         if info.status() != QSettings.NoError:
-            msg = i18n("Failed to read result info '%1'")
-            qDebug(msg.arg(path))
+            qDebug(i18n("Failed to read result info '%1'", path))
             return
 
         # Get thumbnail info
@@ -275,8 +272,7 @@ class Service(QObject):
 
         thumb = QFile(thumb_path)
         if not thumb.open(QIODevice.WriteOnly):
-            msg = i18n("Failed to write result thumbnail '%1'")
-            qDebug(msg.arg(thumb_path))
+            qDebug(i18n("Failed to write result thumbnail '%1'", thumb_path))
             return
 
         thumb.write(data)
@@ -309,8 +305,7 @@ class Service(QObject):
 
         image = QFile(cache_path)
         if not image.open(QIODevice.WriteOnly):
-            msg = i18n("Failed to write result image '%1'")
-            qDebug(msg.arg(cache_path))
+            qDebug(i18n("Failed to write result image '%1'", cache_path))
             return
 
         image.write(data)
@@ -327,8 +322,7 @@ class Service(QObject):
 
         info = QSettings(info_path, QSettings.IniFormat)
         if info.status() != QSettings.NoError:
-            msg = i18n("Failed to read result info '%1'")
-            qDebug(msg.arg(path))
+            qDebug(i18n("Failed to read result info '%1'", path))
             return
 
         # Get thumbnail info
@@ -445,7 +439,7 @@ class Service(QObject):
         image = QImage()
         data = reply.readAll()
         if not image.loadFromData(data):
-            qDebug(i18n("Failed to retrieve image from '%1'").arg(img_url))
+            qDebug(i18n("Failed to retrieve image from '%1'", img_url))
             return
 
         name = reply.property("name").toString()
