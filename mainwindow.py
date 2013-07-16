@@ -181,7 +181,7 @@ class MainWindow(KMainWindow):
         io_save.setIcon(KIcon("document-save"))
         io_save.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         io_save.setEnabled(False)
-        #io_save.triggered().connect(None) TODO
+        io_save.clicked.connect(self.saveResult)
         self.m_action_save_result = io_save
 
         io_save_location = QComboBox()
@@ -280,12 +280,15 @@ class MainWindow(KMainWindow):
         self.updateStatus()
 
     #--------------------------------------------------------------------------
-    def updateResult(self, name, completed=False):
+    def updateResult(self, name, completed=False, saved=False):
         item = self.m_items[name]
         if item == self.m_list.currentItem():
             self.showResult(item)
 
-        if completed:
+        if saved:
+            scheme = KColorScheme(QPalette.Active)
+            item.setForeground(scheme.foreground(KColorScheme.PositiveText))
+        elif completed:
             scheme = KColorScheme(QPalette.Active)
             item.setForeground(scheme.foreground(KColorScheme.NormalText))
 
@@ -315,6 +318,8 @@ class MainWindow(KMainWindow):
         # Enable/disable result actions or show saved location
         self.m_action_discard_result.setEnabled(True)
         if type(status) is QString:
+            msg = i18nc("@info", "Saved as '%1'", status)
+            self.m_result_saved_path.setText(msg)
             self.m_iobar_container.setCurrentIndex(1)
         else:
             self.m_iobar_container.setCurrentIndex(0)
@@ -347,6 +352,20 @@ class MainWindow(KMainWindow):
                 error_text = i18nc("@info", "Failed to create directory")
                 KMessageBox.sorry(self, error_text, error_title)
                 return
+
+    #--------------------------------------------------------------------------
+    def saveResult(self):
+        item = self.m_list.currentItem()
+        if item is None:
+            return
+
+        dir_view = self.m_save_location.view()
+        root_path = dir_view.rootUrl().toLocalFile()
+        target_path = dir_view.currentUrl().toLocalFile()
+        path = KUrl.relativePath(root_path, target_path)[0]
+
+        name = item.data(ResultList.NameRole).toString()
+        self.m_service.saveToDisk(name, path)
 
 #==============================================================================
 # kate: replace-tabs on; replace-tabs-save on; indent-width 4;

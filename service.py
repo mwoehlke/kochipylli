@@ -102,6 +102,8 @@ class Service(QObject):
     def resultImagePath(self, name):
         if name in self.m_results:
             result = self.m_results[name]
+            if "saved_path" in result:
+                return result["saved_path"]
             if "cache_path" in result:
                 return result["cache_path"]
             if "thumb_path" in result:
@@ -145,6 +147,31 @@ class Service(QObject):
             self.setInfoText(self.m_info_pane_title, result, "title")
 
         return True
+
+    #--------------------------------------------------------------------------
+    def saveToDisk(self, name, location):
+        if not name in self.m_results:
+            return
+
+        result = self.m_results[name]
+        if not ("image_name" in result and "cache_path" in result):
+            return
+
+        image_name = result["image_name"]
+        save_path = pathCat(location, image_name)
+        full_save_path = pathCat(self.m_archive.canonicalPath(), save_path)
+
+        image_file = QFile(result["cache_path"])
+        if image_file.rename(full_save_path):
+            self.writeDatabaseEntry(name, save_path)
+            result["saved_path"] = full_save_path
+            self.deleteResult(name, cache_only=True)
+            self.m_window.updateResult(name, saved=True)
+        else:
+            msg = i18nc("@info",
+                        "An error occurred trying to save result '%1' to '%2'",
+                        name, save_path)
+            KMessageBox.sorry(self.m_window, msg)
 
     #--------------------------------------------------------------------------
     # Database Interaction
@@ -327,7 +354,7 @@ class Service(QObject):
         result["cache_path"] = cache_path
 
     #--------------------------------------------------------------------------
-    def deleteResult(self, name):
+    def deleteResult(self, name, cache_only=False):
         info_path = pathCat(self.m_results_info_dir.path(), name)
 
         info = QSettings(info_path, QSettings.IniFormat)
@@ -349,12 +376,19 @@ class Service(QObject):
         # Remove result files
         self.m_results_info_dir.remove(name)
         self.m_results_thumbs_dir.remove(thumb_name)
-        if not cache_name.isEmpty():
-            self.m_results_images_dir.remove(cache_name)
+        if not cache_only:
+            if not cache_name.isEmpty():
+                self.m_results_images_dir.remove(cache_name)
 
-        # Remove from internal result set
-        if name in self.m_results:
-            del self.m_results[name]
+            # Remove from internal result set
+            if name in self.m_results:
+                del self.m_results[name]
+
+        elif name in self.m_results:
+            # Remove result cache path
+            result = self.m_results[name]
+            if "cache_path" in result:
+                del result["cache_path"]
 
     #--------------------------------------------------------------------------
     def discardResult(self, name):
