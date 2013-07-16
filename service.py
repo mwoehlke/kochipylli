@@ -84,7 +84,11 @@ class Service(QObject):
         caption_label = QLabel(caption)
 
         value_label = widget()
-        value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        if isinstance(value_label, QLabel):
+            value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
+        vertical_policy = value_label.sizePolicy().verticalPolicy()
+        value_label.setSizePolicy(QSizePolicy.Expanding, vertical_policy)
 
         self.m_info_pane_layout.addRow(caption_label, value_label)
 
@@ -128,15 +132,15 @@ class Service(QObject):
             widget.setText(value if parser is None else parser(value))
             widget.setEnabled(True)
 
-            if type(widget) is QLabel:
+            if isinstance(widget, QLabel):
                 widget.setWordWrap(wrap)
-            if type(widget) is KSqueezedTextLabel:
+            if isinstance(widget, KSqueezedTextLabel):
                 widget.setTextElideMode(Qt.ElideNone if wrap else Qt.ElideRight)
         else:
             widget.setText(i18nc("@info", "(unavailable)"))
             widget.setEnabled(False)
 
-            if type(widget) is KSqueezedTextLabel:
+            if isinstance(widget, KSqueezedTextLabel):
                 widget.setTextElideMode(Qt.ElideRight)
 
     #--------------------------------------------------------------------------
