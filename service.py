@@ -9,6 +9,11 @@ from PyQt4.QtGui import *
 from PyQt4.QtNetwork import *
 
 #------------------------------------------------------------------------------
+def pathCat(*args):
+    t = "/".join(["%%%i" % (i + 1) for i in xrange(len(args))])
+    return QDir.cleanPath(QString(t).arg(*args))
+
+#------------------------------------------------------------------------------
 def listFiles(out, path):
     path_str = path.path()
 
@@ -173,8 +178,7 @@ class Service(QObject):
     # Saved Results Management
     #--------------------------------------------------------------------------
     def resultInfo(self, result_name, read_only=False):
-        info_path = self.m_results_info_dir.path()
-        info_path = QString("%1/%2").arg(info_path, result_name)
+        info_path = pathCat(self.m_results_info_dir.path(), result_name)
 
         info = QSettings(info_path, QSettings.IniFormat)
         if info.status() != QSettings.NoError:
@@ -227,8 +231,7 @@ class Service(QObject):
         self.loadResultInfo(self.m_results[result_name], info)
 
         # Try to load saved result thumbnail
-        thumb_path = self.m_results_thumbs_dir.path()
-        thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
+        thumb_path = pathCat(self.m_results_thumbs_dir.path(), thumb_name)
         image = QImage()
         if image.load(thumb_path):
             result = self.m_results[result_name]
@@ -240,7 +243,7 @@ class Service(QObject):
                 result["cache_name"] = cache_name
 
                 cache_path = self.m_results_images_dir.path()
-                cache_path = QString("%1/%2").arg(cache_path, cache_name)
+                cache_path = pathCat(cache_path, cache_name)
                 result["cache_path"] = cache_path
 
             self.m_window.addThumbnail(result_name, image, title,
@@ -277,8 +280,7 @@ class Service(QObject):
         if not self.saveResultInfo(info):
             return
 
-        thumb_path = self.m_results_thumbs_dir.path()
-        thumb_path = QString("%1/%2").arg(thumb_path, thumb_name)
+        thumb_path = pathCat(self.m_results_thumbs_dir.path(), thumb_name)
 
         thumb = QFile(thumb_path)
         if not thumb.open(QIODevice.WriteOnly):
@@ -310,8 +312,7 @@ class Service(QObject):
         if not self.saveResultInfo(info):
             return
 
-        cache_path = self.m_results_images_dir.path()
-        cache_path = QString("%1/%2").arg(cache_path, cache_name)
+        cache_path = pathCat(self.m_results_images_dir.path(), cache_name)
 
         image = QFile(cache_path)
         if not image.open(QIODevice.WriteOnly):
@@ -327,8 +328,7 @@ class Service(QObject):
 
     #--------------------------------------------------------------------------
     def deleteResult(self, name):
-        info_path = self.m_results_info_dir.path()
-        info_path = QString("%1/%2").arg(info_path, name)
+        info_path = pathCat(self.m_results_info_dir.path(), name)
 
         info = QSettings(info_path, QSettings.IniFormat)
         if info.status() != QSettings.NoError:
