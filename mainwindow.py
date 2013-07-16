@@ -350,7 +350,7 @@ class MainWindow(KMainWindow):
         if not KIO.NetAccess.exists(new_url, check_mode, self):
             if not KIO.NetAccess.mkdir(new_url, self):
                 error_text = i18nc("@info", "Failed to create directory")
-                KMessageBox.sorry(self, error_text, error_title)
+                KMessageBox.sorry(self, error_text)
                 return
 
     #--------------------------------------------------------------------------
