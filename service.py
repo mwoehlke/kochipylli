@@ -105,6 +105,16 @@ class Service(QObject):
         return None
 
     #--------------------------------------------------------------------------
+    def resultStatus(self, name):
+        if name in self.m_results:
+            if name in self.m_database_entries:
+                return self.m_database_entries[name]
+            elif "cache_path" in self.m_results[name]:
+                return True
+
+        return False
+
+    #--------------------------------------------------------------------------
     def setInfoText(self, widget, result, key, wrap=False, parser=None):
         if key in result:
             value = result[key]

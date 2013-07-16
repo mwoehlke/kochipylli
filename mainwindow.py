@@ -304,7 +304,7 @@ class MainWindow(KMainWindow):
         # Get result information
         name = item.data(ResultList.NameRole).toString()
         image_path = self.m_service.resultImagePath(name)
-        status = False # TODO get from service
+        status = self.m_service.resultStatus(name)
 
         # Populate information pane
         if self.m_service.populateResultInfoPane(self.m_info_pane, name):
