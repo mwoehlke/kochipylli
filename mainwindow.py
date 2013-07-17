@@ -262,7 +262,8 @@ class MainWindow(KMainWindow):
             self.m_progress.setRange(0, 1)
 
     #--------------------------------------------------------------------------
-    def addThumbnail(self, name, image, title, fetch_url, available=False):
+    def addThumbnail(self, name, image, title, fetch_url,
+                     available=False, visible=True):
         item = QListWidgetItem(title)
         item.setData(Qt.DecorationRole, fitImage(image, self.m_icon_size))
         item.setData(ResultList.NameRole, name)
@@ -277,6 +278,8 @@ class MainWindow(KMainWindow):
 
         self.m_items[name] = item
         self.m_list.addItem(item)
+        item.setHidden(not visible) # Must do this AFTER adding the item!
+
         self.updateStatus()
 
     #--------------------------------------------------------------------------
@@ -329,6 +332,18 @@ class MainWindow(KMainWindow):
 
         # Show result image
         self.m_viewer.openUrl(KUrl.fromPath(image_path))
+
+    #--------------------------------------------------------------------------
+    def setResultVisibility(self, name, state):
+        if name in self.m_items:
+            self.m_items[name].setHidden(not state)
+
+    #--------------------------------------------------------------------------
+    def setVisibleResults(self, names):
+        for n in xrange(self.m_list.count()):
+            item = self.m_list.item(n)
+            name = item.data(ResultList.NameRole).toString()
+            item.setHidden(not name in names)
 
     #--------------------------------------------------------------------------
     def createFolder(self):

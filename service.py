@@ -38,6 +38,7 @@ class Service(QObject):
         QObject.__init__(self, parent)
         self.m_window = None
         self.m_navbar = None
+        self.m_selected_search = QComboBox()
         self.m_net_manager = QNetworkAccessManager(self)
         self.m_outstanding_requests = {}
         self.m_outstanding_request_urls = set()
@@ -48,6 +49,7 @@ class Service(QObject):
 
         self.m_existing_files = {}
         self.m_results = {}
+        self.m_result_sets = {}
         self.m_database_entries = {}
 
         self.m_archive = QDir(archive)
@@ -76,8 +78,18 @@ class Service(QObject):
         self.m_window = window
 
     #--------------------------------------------------------------------------
-    def setupNavigationBar(self, navbar):
+    def setupNavigationBar(self, navbar, add_result_sets=True):
         self.m_navbar = navbar
+        if add_result_sets:
+            if len(navbar.actions()):
+                navbar.addSeparator()
+
+            self.m_selected_search.addItem("(all results)")
+            self.m_selected_search.setCurrentIndex(0)
+            navbar.addWidget(self.m_selected_search)
+
+            self.m_selected_search.currentIndexChanged.connect(
+                self.setSelectedSearch)
 
     #--------------------------------------------------------------------------
     def addInfoLabel(self, caption, widget=KSqueezedTextLabel):
@@ -153,6 +165,27 @@ class Service(QObject):
             self.setInfoText(self.m_info_pane_title, result, "title")
 
         return True
+
+    #--------------------------------------------------------------------------
+    def selectedSearch(self):
+        index = self.m_selected_search.currentIndex()
+        data = self.m_selected_search.itemData(index)
+        return data.toString() if data.isValid() else None
+
+    #--------------------------------------------------------------------------
+    def setSelectedSearch(self):
+        # Get selected search
+        selected_search = self.selectedSearch()
+
+        # Get result set for selected search
+        selected_results = set()
+        if selected_search is None:
+            selected_results = self.m_results
+        elif selected_search in self.m_result_sets:
+            selected_results = self.m_result_sets[selected_search]
+
+        # Show (only) selected results
+        self.m_window.setVisibleResults(selected_results)
 
     #--------------------------------------------------------------------------
     def saveToDisk(self, name, location):
@@ -304,7 +337,7 @@ class Service(QObject):
             return
 
         # If loading from disk fails, try to fetch again
-        self.requestThumbnail(thumb_url, result_name, title, fetch_url)
+        self.requestThumbnail(thumb_url, result_name, title, fetch_url, None)
 
     #--------------------------------------------------------------------------
     def loadResultInfo(self, result, info):
@@ -417,6 +450,19 @@ class Service(QObject):
                 del result["cache_path"]
 
     #--------------------------------------------------------------------------
+    def addResultToSet(self, name, result_set, update_visibility=False):
+        if result_set is not None:
+            self.m_result_sets[result_set].add(name)
+
+        if update_visibility:
+            selected_search = self.selectedSearch()
+            visible = False
+            if selected_search is None or result_set == selected_search:
+                visible = True
+
+            self.m_window.setResultVisibility(name, visible)
+
+    #--------------------------------------------------------------------------
     def discardResult(self, name):
         # Delete result files
         self.deleteResult(name)
@@ -467,13 +513,22 @@ class Service(QObject):
     def updateJobs(self):
         outstanding_requests_count = len(self.m_outstanding_requests)
         self.m_window.setActiveJobs(outstanding_requests_count)
-        self.m_navbar.setEnabled(outstanding_requests_count <= 0)
+        self.enableSearching(outstanding_requests_count <= 0)
 
     #--------------------------------------------------------------------------
-    def requestImageListing(self, url):
+    def requestImageListing(self, url, search_name=None, search_key=None):
+        if search_name is not None and not search_key in self.m_result_sets:
+            self.m_result_sets[search_key] = set()
+            if search_name is not None:
+                new_index = self.m_selected_search.count()
+                self.m_selected_search.addItem(search_name, search_key)
+                self.m_selected_search.setCurrentIndex(new_index)
+
         reply = self.request(url)
         if reply is None:
             return
+
+        reply.setProperty("result_set", search_key)
 
         reply.finished.connect(self.dispatchImageListingRequest)
 
@@ -481,10 +536,14 @@ class Service(QObject):
     def dispatchImageListingRequest(self):
         reply = self.sender()
         data = reply.readAll()
-        self.parseImageListingRequest(reply.url(), data)
+
+        result_set = reply.property("result_set")
+        result_set = result_set.toString() if result_set.isValid() else None
+
+        self.parseImageListingRequest(reply.url(), data, result_set)
 
     #--------------------------------------------------------------------------
-    def requestThumbnail(self, thumb_url, name, title, fetch_url):
+    def requestThumbnail(self, thumb_url, name, title, fetch_url, result_set):
         # Don't download results we already have in the working set
         if name in self.m_results:
             return
@@ -499,12 +558,14 @@ class Service(QObject):
         reply.setProperty("name", name)
         reply.setProperty("title", title)
         reply.setProperty("fetch_url", fetch_url)
+        reply.setProperty("result_set", result_set)
         reply.finished.connect(self.addReadyThumbnail)
 
     #--------------------------------------------------------------------------
     def addReadyThumbnail(self):
         reply = self.sender()
 
+        # Load result thumbnail into memory
         img_url = reply.url()
         image = QImage()
         data = reply.readAll()
@@ -512,13 +573,28 @@ class Service(QObject):
             qDebug(i18n("Failed to retrieve image from '%1'", img_url))
             return
 
+        # Get result information
         name = reply.property("name").toString()
         title = reply.property("title").toString()
         fetch_url = reply.property("fetch_url").toString()
+        result_set = reply.property("result_set")
+        result_set = result_set.toString() if result_set.isValid() else None
 
+        # Create result cache entry
         self.m_results[name] = { "title": title, "fetch_url": fetch_url }
+
+        # Add result to current set
+        self.addResultToSet(name, result_set)
+
+        selected_search = self.selectedSearch()
+        visible = False
+        if selected_search is None or result_set == selected_search:
+            visible = True
+
+        # Save result thumbnail and add to UI list
         self.saveResult(img_url, data, name, title, fetch_url)
-        self.m_window.addThumbnail(name, image, title, fetch_url)
+        self.m_window.addThumbnail(name, image, title, fetch_url,
+                                   visible=visible)
 
     #--------------------------------------------------------------------------
     def requestResult(self, name, url):
