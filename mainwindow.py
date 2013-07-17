@@ -55,8 +55,8 @@ class ResultList(QListWidget):
 
         self.m_last_scroll_value = 0
         self.m_scroll_bar = self.horizontalScrollBar()
-        self.m_scroll_bar.rangeChanged.connect(self.scrollRangeChanged)
-        self.m_scroll_bar.valueChanged.connect(self.scrollValueChanged)
+        self.m_scroll_bar.rangeChanged.connect(self.updateScrollForRangeChange)
+        self.m_scroll_bar.valueChanged.connect(self.updateScrollForValueChange)
 
     #--------------------------------------------------------------------------
     def mousePressEvent(self, event):
@@ -89,13 +89,13 @@ class ResultList(QListWidget):
             item = None
 
     #--------------------------------------------------------------------------
-    def scrollRangeChanged(self, minimum, maximum):
+    def updateScrollForRangeChange(self, minimum, maximum):
         current_value = self.m_scroll_bar.value()
         if self.m_last_scroll_value != current_value:
             self.m_scroll_bar.setValue(self.m_last_scroll_value)
 
     #--------------------------------------------------------------------------
-    def scrollValueChanged(self, new_value):
+    def updateScrollForValueChange(self, new_value):
         maximum = self.m_scroll_bar.maximum()
         if new_value < maximum or new_value > self.m_last_scroll_value:
             self.m_last_scroll_value = new_value
