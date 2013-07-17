@@ -163,16 +163,6 @@ class MainWindow(KMainWindow):
         iobar_tools_layout.setContentsMargins(0, 0, 0, 0)
         iobar_tools.setLayout(iobar_tools_layout)
 
-        io_discard = QToolButton()
-        io_discard.setText(i18nc("@action:button", "Discard"))
-        io_discard.setToolTip(i18nc("@info>tooltip",
-                                    "Discard the selected result"))
-        io_discard.setIcon(KIcon("user-trash"))
-        io_discard.setToolButtonStyle(Qt.ToolButtonFollowStyle)
-        io_discard.setEnabled(False)
-        io_discard.clicked.connect(listview.deleteSelectedItems)
-        self.m_action_discard_result = io_discard
-
         msg = i18nc("@info>tooltip",
                     "Save result to the currently selected folder")
         io_save = QToolButton()
@@ -207,10 +197,20 @@ class MainWindow(KMainWindow):
         io_new_folder.clicked.connect(self.createFolder)
         self.m_action_create_folder = io_new_folder
 
-        iobar_tools_layout.addWidget(io_discard)
+        io_discard = QToolButton()
+        io_discard.setText(i18nc("@action:button", "Discard"))
+        io_discard.setToolTip(i18nc("@info>tooltip",
+                                    "Discard the selected result"))
+        io_discard.setIcon(KIcon("user-trash"))
+        io_discard.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+        io_discard.setEnabled(False)
+        io_discard.clicked.connect(listview.deleteSelectedItems)
+        self.m_action_discard_result = io_discard
+
         iobar_tools_layout.addWidget(io_save)
         iobar_tools_layout.addWidget(io_save_location)
         iobar_tools_layout.addWidget(io_new_folder)
+        iobar_tools_layout.addWidget(io_discard)
 
         iobar_save_location = QLabel()
         self.m_result_saved_path = iobar_save_location
