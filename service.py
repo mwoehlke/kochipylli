@@ -85,7 +85,9 @@ class Service(QObject):
 
         value_label = widget()
         if isinstance(value_label, QLabel):
-            value_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            flags = value_label.textInteractionFlags()
+            flags |= Qt.TextSelectableByMouse
+            value_label.setTextInteractionFlags(flags)
 
         vertical_policy = value_label.sizePolicy().verticalPolicy()
         value_label.setSizePolicy(QSizePolicy.Expanding, vertical_policy)
