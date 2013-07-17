@@ -166,16 +166,36 @@ class Service(QObject):
         full_save_path = pathCat(self.m_archive.canonicalPath(), save_path)
 
         image_file = QFile(result["cache_path"])
-        if image_file.rename(full_save_path):
-            self.writeDatabaseEntry(name, save_path)
-            result["saved_path"] = full_save_path
-            self.deleteResult(name, cache_only=True)
-            self.m_window.updateResult(name, saved=True)
-        else:
+        if QFileInfo(full_save_path).exists():
+            # If destination file exists, check if it is the same file
+            qch = QCryptographicHash
+            dest_file = QFile(full_save_path)
+            dest_hash = qch.hash(dest_file.readAll(), qch.Sha1)
+            src_hash = qch.hash(image_file.readAll(), qch.Sha1)
+
+            if src_hash == dest_hash:
+                # Same file; remove the one in the result cache and record as
+                # saved
+                qDebug(i18n("Destination '%1' matches source; cache discarded",
+                            save_path))
+                image_file.remove()
+            else:
+                msg = i18nc("@info", "A file named '%1' already exists",
+                            save_path)
+                KMessageBox.error(self.m_window, msg)
+                return
+
+        elif not image_file.rename(full_save_path):
             msg = i18nc("@info",
                         "An error occurred trying to save result '%1' to '%2'",
                         name, save_path)
             KMessageBox.sorry(self.m_window, msg)
+            return
+
+        self.writeDatabaseEntry(name, save_path)
+        result["saved_path"] = full_save_path
+        self.deleteResult(name, cache_only=True)
+        self.m_window.updateResult(name, saved=True)
 
     #--------------------------------------------------------------------------
     # Database Interaction
