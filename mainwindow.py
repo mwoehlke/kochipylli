@@ -163,7 +163,7 @@ class MainWindow(KMainWindow):
         iobar_tools_layout.setContentsMargins(0, 0, 0, 0)
         iobar_tools.setLayout(iobar_tools_layout)
 
-        msg = i18nc("@info>tooltip",
+        msg = i18nc("@info:tooltip",
                     "Save result to the currently selected folder")
         io_save = QToolButton()
         io_save.setText(i18nc("@action:button", "Save"))
@@ -186,7 +186,7 @@ class MainWindow(KMainWindow):
         io_save_location.setEnabled(False)
         self.m_save_location = io_save_location
 
-        msg = i18nc("@info>tooltip",
+        msg = i18nc("@info:tooltip",
                     "Create a new folder in the currently selected folder")
         io_new_folder = QToolButton()
         io_new_folder.setText(i18nc("@action:button", "New Folder"))
@@ -199,7 +199,7 @@ class MainWindow(KMainWindow):
 
         io_discard = QToolButton()
         io_discard.setText(i18nc("@action:button", "Discard"))
-        io_discard.setToolTip(i18nc("@info>tooltip",
+        io_discard.setToolTip(i18nc("@info:tooltip",
                                     "Discard the selected result"))
         io_discard.setIcon(KIcon("user-trash"))
         io_discard.setToolButtonStyle(Qt.ToolButtonFollowStyle)
