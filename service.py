@@ -39,6 +39,7 @@ class Service(QObject):
         self.m_window = None
         self.m_navbar = None
         self.m_selected_search = QComboBox()
+        self.m_execute_search = None
         self.m_net_manager = QNetworkAccessManager(self)
         self.m_outstanding_requests = {}
         self.m_outstanding_request_urls = set()
@@ -78,18 +79,32 @@ class Service(QObject):
         self.m_window = window
 
     #--------------------------------------------------------------------------
-    def setupNavigationBar(self, navbar, add_result_sets=True):
+    def setupNavigationBar(self, navbar, add_execute_search=True,
+                           add_result_sets=True):
         self.m_navbar = navbar
+
+        if add_execute_search:
+            execute_search = QToolButton()
+            execute_search.setText(i18nc("@action:button", "Go"))
+            execute_search.setToolTip(i18nc("@info:tooltip", "Execute search"))
+            execute_search.setIcon(KIcon("go-jump-locationbar"))
+            execute_search.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+            execute_search.clicked.connect(self.executeSearch)
+
+            navbar.addWidget(execute_search)
+            self.m_execute_search = execute_search
+            print 'execute search button ready'
+
         if add_result_sets:
             if len(navbar.actions()):
                 navbar.addSeparator()
 
-            self.m_selected_search.addItem("(all results)")
-            self.m_selected_search.setCurrentIndex(0)
-            navbar.addWidget(self.m_selected_search)
+            selected_search = self.m_selected_search
+            selected_search.addItem("(all results)")
+            selected_search.setCurrentIndex(0)
+            selected_search.currentIndexChanged.connect(self.setSelectedSearch)
 
-            self.m_selected_search.currentIndexChanged.connect(
-                self.setSelectedSearch)
+            navbar.addWidget(selected_search)
 
     #--------------------------------------------------------------------------
     def addInfoLabel(self, caption, widget=KSqueezedTextLabel):
@@ -186,6 +201,10 @@ class Service(QObject):
 
         # Show (only) selected results
         self.m_window.setVisibleResults(selected_results)
+
+    #--------------------------------------------------------------------------
+    def enableSearching(self, state):
+        self.m_execute_search.setEnabled(state)
 
     #--------------------------------------------------------------------------
     def saveToDisk(self, name, location):
