@@ -17,20 +17,23 @@ def fitImage(image, size):
     if in_size == size:
         return QPixmap.fromImage(image)
 
+    new_size = QSize(size)
     if image.width() > size.width() or image.height() > size.height():
-        size = QSize(size)
-        size.scale(in_size, Qt.KeepAspectRatioByExpanding)
+        new_size.scale(in_size, Qt.KeepAspectRatioByExpanding)
 
     in_center = QPointF(in_size.width() / 2, in_size.height() / 2)
-    out_center = QPointF(size.width() / 2, size.height() / 2)
+    out_center = QPointF(new_size.width() / 2, new_size.height() / 2)
 
-    result = QImage(size, QImage.Format_ARGB32)
+    result = QImage(new_size, QImage.Format_ARGB32)
     result.fill(Qt.transparent)
     p = QPainter(result)
     p.drawImage((out_center - in_center).toPoint(), image)
     p.end()
 
-    return QPixmap.fromImage(result)
+    if size == new_size:
+        return QPixmap.fromImage(result)
+    else:
+        return QPixmap.fromImage(result.scaled(size))
 
 #------------------------------------------------------------------------------
 def isRequestEvent(event):
