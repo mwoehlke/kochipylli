@@ -152,26 +152,23 @@ class MainWindow(KMainWindow):
 
         # Create navigation bar
         navbar = QToolBar(i18nc("@title:toolbar", "Navigation"))
+        navbar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         service.setupNavigationBar(navbar)
         self.addToolBar(navbar)
 
         # Create I/O bar
         iobar = QToolBar(i18nc("@title:toolbar", "File"))
-
-        iobar_tools = QWidget()
-        iobar_tools_layout = QHBoxLayout()
-        iobar_tools_layout.setContentsMargins(0, 0, 0, 0)
-        iobar_tools.setLayout(iobar_tools_layout)
+        iobar_tools = QToolBar()
+        iobar_tools.setToolButtonStyle(Qt.ToolButtonFollowStyle)
 
         msg = i18nc("@info:tooltip",
                     "Save result to the currently selected folder")
-        io_save = QToolButton()
+        io_save = QAction(self)
         io_save.setText(i18nc("@action:button", "Save"))
         io_save.setToolTip(msg)
         io_save.setIcon(KIcon("document-save"))
-        io_save.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         io_save.setEnabled(False)
-        io_save.clicked.connect(self.saveResult)
+        io_save.triggered.connect(self.saveResult)
         self.m_action_save_result = io_save
 
         io_save_location = QComboBox()
@@ -184,33 +181,33 @@ class MainWindow(KMainWindow):
         for col in range(1, dir_model.columnCount()):
             dir_view.setColumnHidden(col, True)
         io_save_location.setEnabled(False)
+        io_save_location.setSizePolicy(QSizePolicy.Expanding,
+                                       QSizePolicy.Preferred)
         self.m_save_location = io_save_location
 
         msg = i18nc("@info:tooltip",
                     "Create a new folder in the currently selected folder")
-        io_new_folder = QToolButton()
+        io_new_folder = QAction(self)
         io_new_folder.setText(i18nc("@action:button", "New Folder"))
         io_new_folder.setToolTip(msg)
         io_new_folder.setIcon(KIcon("folder-new"))
-        io_new_folder.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         io_new_folder.setEnabled(False)
-        io_new_folder.clicked.connect(self.createFolder)
+        io_new_folder.triggered.connect(self.createFolder)
         self.m_action_create_folder = io_new_folder
 
-        io_discard = QToolButton()
+        io_discard = QAction(self)
         io_discard.setText(i18nc("@action:button", "Discard"))
         io_discard.setToolTip(i18nc("@info:tooltip",
                                     "Discard the selected result"))
         io_discard.setIcon(KIcon("user-trash"))
-        io_discard.setToolButtonStyle(Qt.ToolButtonFollowStyle)
         io_discard.setEnabled(False)
-        io_discard.clicked.connect(listview.deleteSelectedItems)
+        io_discard.triggered.connect(listview.deleteSelectedItems)
         self.m_action_discard_result = io_discard
 
-        iobar_tools_layout.addWidget(io_save)
-        iobar_tools_layout.addWidget(io_save_location)
-        iobar_tools_layout.addWidget(io_new_folder)
-        iobar_tools_layout.addWidget(io_discard)
+        iobar_tools.addAction(io_save)
+        iobar_tools.addWidget(io_save_location)
+        iobar_tools.addAction(io_new_folder)
+        iobar_tools.addAction(io_discard)
 
         iobar_save_location = QLabel()
         self.m_result_saved_path = iobar_save_location

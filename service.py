@@ -79,32 +79,26 @@ class Service(QObject):
         self.m_window = window
 
     #--------------------------------------------------------------------------
-    def setupNavigationBar(self, navbar, add_execute_search=True,
-                           add_result_sets=True):
+    def setupNavigationBar(self, navbar):
         self.m_navbar = navbar
 
-        if add_execute_search:
-            execute_search = QToolButton()
-            execute_search.setText(i18nc("@action:button", "Go"))
-            execute_search.setToolTip(i18nc("@info:tooltip", "Execute search"))
-            execute_search.setIcon(KIcon("go-jump-locationbar"))
-            execute_search.setToolButtonStyle(Qt.ToolButtonFollowStyle)
-            execute_search.clicked.connect(self.executeSearch)
+        execute_search = QAction(self)
+        execute_search.setText(i18nc("@action:button", "Go"))
+        execute_search.setToolTip(i18nc("@info:tooltip", "Execute search"))
+        execute_search.setIcon(KIcon("go-jump-locationbar"))
+        execute_search.triggered.connect(self.executeSearch)
 
-            navbar.addWidget(execute_search)
-            self.m_execute_search = execute_search
-            print 'execute search button ready'
+        navbar.addAction(execute_search)
+        self.m_execute_search = execute_search
 
-        if add_result_sets:
-            if len(navbar.actions()):
-                navbar.addSeparator()
+        navbar.addSeparator()
 
-            selected_search = self.m_selected_search
-            selected_search.addItem("(all results)")
-            selected_search.setCurrentIndex(0)
-            selected_search.currentIndexChanged.connect(self.setSelectedSearch)
+        selected_search = self.m_selected_search
+        selected_search.addItem("(all results)")
+        selected_search.setCurrentIndex(0)
+        selected_search.currentIndexChanged.connect(self.setSelectedSearch)
 
-            navbar.addWidget(selected_search)
+        navbar.addWidget(selected_search)
 
     #--------------------------------------------------------------------------
     def addInfoLabel(self, caption, widget=KSqueezedTextLabel):
