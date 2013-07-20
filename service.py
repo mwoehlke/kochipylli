@@ -111,7 +111,8 @@ class Service(QObject):
         navbar.addSeparator()
 
         selected_search = self.m_selected_search
-        selected_search.addItem("(all results)")
+        selected_search.addItem(i18nc("@item Search result set",
+                                      "(all results)"))
         selected_search.setCurrentIndex(0)
         selected_search.currentIndexChanged.connect(self.setSelectedSearch)
 
