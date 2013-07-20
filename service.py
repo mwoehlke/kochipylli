@@ -40,6 +40,7 @@ class Service(QObject):
         self.m_navbar = None
         self.m_selected_search = QComboBox()
         self.m_execute_search = None
+        self.m_search_options = QMenu()
         self.m_net_manager = QNetworkAccessManager(self)
         self.m_outstanding_requests = {}
         self.m_outstanding_request_urls = set()
@@ -91,6 +92,17 @@ class Service(QObject):
         navbar.addAction(execute_search)
         self.m_execute_search = execute_search
 
+        search_options = QAction(self)
+        search_options.setText(i18nc("@action:button", "Options"))
+        execute_search.setToolTip(i18nc("@info:tooltip",
+                                        "Configure search options"))
+        search_options.setIcon(KIcon("configure"))
+        search_options.setMenu(self.m_search_options)
+
+        navbar.addAction(search_options)
+        search_options_button = navbar.widgetForAction(search_options)
+        search_options_button.setPopupMode(QToolButton.InstantPopup)
+
         navbar.addSeparator()
 
         selected_search = self.m_selected_search
@@ -99,6 +111,16 @@ class Service(QObject):
         selected_search.currentIndexChanged.connect(self.setSelectedSearch)
 
         navbar.addWidget(selected_search)
+
+    #--------------------------------------------------------------------------
+    def addSearchOption(self, text, tool_tip):
+        action = QAction(self)
+        action.setText(text)
+        action.setToolTip(tool_tip)
+        action.setCheckable(True)
+
+        self.m_search_options.addAction(action)
+        return action
 
     #--------------------------------------------------------------------------
     def addInfoLabel(self, caption, widget=KSqueezedTextLabel):
