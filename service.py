@@ -45,6 +45,11 @@ class Service(QObject):
         self.m_outstanding_requests = {}
         self.m_outstanding_request_urls = set()
 
+        it = i18nc("@action:menu", "Show Saved")
+        itt = i18nc("@info:tooltip",
+                    "Include already-saved items in search results")
+        self.m_show_saved = self.addSearchOption(it, itt)
+
         self.m_info_pane_layout = None
         self.m_info_pane_id = None
         self.m_info_pane_title = None
@@ -373,6 +378,21 @@ class Service(QObject):
 
         # If loading from disk fails, try to fetch again
         self.requestThumbnail(thumb_url, result_name, title, fetch_url, None)
+
+    #--------------------------------------------------------------------------
+    def loadResultFromDatabase(self, result_name, title, fetch_url):
+        if not result_name in self.m_database_entries:
+            return
+
+        path = self.m_archive.filePath(self.m_database_entries[result_name])
+        result = { "title": title, "fetch_url": fetch_url, "saved_path": path }
+
+        # Try to load saved result thumbnail
+        image = QImage()
+        if image.load(path):
+            self.m_results[result_name] = result
+            self.m_window.addThumbnail(result_name, image, title,
+                                       fetch_url, saved=True)
 
     #--------------------------------------------------------------------------
     def loadResultInfo(self, result, info):

@@ -260,7 +260,7 @@ class MainWindow(KMainWindow):
 
     #--------------------------------------------------------------------------
     def addThumbnail(self, name, image, title, fetch_url,
-                     available=False, visible=True):
+                     available=False, saved=False, visible=True):
         item = QListWidgetItem(title)
         item.setData(Qt.DecorationRole, fitImage(image, self.m_icon_size))
         item.setData(ResultList.NameRole, name)
@@ -268,9 +268,10 @@ class MainWindow(KMainWindow):
 
         scheme = KColorScheme(QPalette.Active)
         color = KColorScheme.LinkText
-        if available:
+        if saved:
+            color = KColorScheme.PositiveText
+        elif available:
             color = KColorScheme.NormalText
-            # TODO PositiveText if already saved
         item.setForeground(scheme.foreground(color))
 
         self.m_items[name] = item
